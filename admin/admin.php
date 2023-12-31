@@ -120,6 +120,34 @@ include_once("../koneksi.php");
                 </a>
               </li>
             </ul>
+            <a href="#" class="nav-link active">              
+              <p>
+                Dokter
+                <i class="right fas fa-angle-left"></i>
+              </p>
+            </a>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="obat/obat.php" class="nav-link active">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Kelola Dokter</p>
+                </a>
+              </li>
+            </ul>
+            <a href="#" class="nav-link active">              
+              <p>
+                Poli
+                <i class="right fas fa-angle-left"></i>
+              </p>
+            </a>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="poli/poli.php" class="nav-link active">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Kelola Poli</p>
+                </a>
+              </li>
+            </ul>
           </li>
       </nav>
       <nav class="mt-2">
