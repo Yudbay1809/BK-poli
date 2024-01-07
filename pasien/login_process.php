@@ -1,28 +1,29 @@
-
-<?php 
-// mengaktifkan session php
+<?php
 session_start();
- 
-// menghubungkan dengan koneksi
+
 include '../koneksi.php';
- 
-// menangkap data yang dikirim dari form
-$nama = $_POST['nama'];
-$no_ktp = $_POST['no_ktp'];
- 
-// menyeleksi data admin dengan username dan no_ktp yang sesuai
-$data = mysqli_query($koneksi,"select * from pasien where nama='$nama' and no_ktp='$no_ktp'");
- 
-// menghitung jumlah data yang ditemukan
-$cek = mysqli_num_rows($data);
- 
-if($cek > 0){
-	$_SESSION['nama'] = $nama;
-	$_SESSION['status'] = "login";
-	header("location: pasien.php");
-}else{
-    $_SESSION["login_error"] = "Kombinasi Username dan no_ktp tidak valid.";
-    header("Location: login.php");
-    exit();
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $nama = $_POST['nama'];
+    $no_ktp = $_POST['no_ktp'];
+
+    // Query untuk memeriksa kecocokan nama dan nomor KTP di database
+    $sqlLogin = "SELECT * FROM pasien WHERE nama = '$nama' AND no_ktp = '$no_ktp'";
+    $resultLogin = mysqli_query($koneksi, $sqlLogin);
+
+    if ($resultLogin && mysqli_num_rows($resultLogin) > 0) {
+        $rowPasien = mysqli_fetch_assoc($resultLogin);
+
+        // Tentukan sesi
+        $_SESSION['no_rm'] = $rowPasien['no_rm'];
+
+        // Redirect ke halaman pasien
+        header("Location: pasien.php");
+        exit();
+    } else {
+        $error_message = "Nama atau Nomor KTP salah. Silakan coba lagi.";
+    }
 }
+
+mysqli_close($koneksi);
 ?>

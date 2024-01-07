@@ -1,17 +1,84 @@
 <?php
-// Mulai sesi
 session_start();
 
-// Mengecek apakah sesi 'username' dan 'status' diatur
-if (!isset($_SESSION['nama']) || $_SESSION['status'] !== "login") {
-    // Jika sesi tidak diatur atau status bukan "login", arahkan pengguna ke halaman login
-    $_SESSION["login_error"] = "Anda harus login terlebih dahulu.";
+include '../koneksi.php';
+
+if (!isset($_SESSION['no_rm'])) {
     header("Location: login.php");
     exit();
 }
 
-include_once("../koneksi.php");
+$noRM = $_SESSION['no_rm'];
 
+// Query untuk mendapatkan data pasien
+$sqlPasien = "SELECT * FROM pasien WHERE no_rm = '$noRM'";
+$resultPasien = mysqli_query($koneksi, $sqlPasien);
+
+if ($resultPasien) {
+    $rowPasien = mysqli_fetch_assoc($resultPasien);
+    $namaPasien = $rowPasien['nama'];
+    $nomorRekamMedis = $rowPasien['no_rm'];
+    // Dapatkan ID Pasien
+    $idPasien = $rowPasien['id'];
+    // Tambahan informasi pasien lainnya
+} else {
+    echo "Gagal mengambil informasi pasien: " . mysqli_error($koneksi);
+}
+
+// Menangani pemilihan poli
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    if (isset($_POST['id_poli'])) {
+        $idPoliTerpilih = $_POST['id_poli'];
+
+        // Query untuk mendapatkan data poli terpilih
+        $sqlPoliTerpilih = "SELECT * FROM poli WHERE id = $idPoliTerpilih";
+        $resultPoliTerpilih = mysqli_query($koneksi, $sqlPoliTerpilih);
+
+        if ($resultPoliTerpilih) {
+            $rowPoliTerpilih = mysqli_fetch_assoc($resultPoliTerpilih);
+            $namaPoliTerpilih = $rowPoliTerpilih['nama_poli'];
+
+            // Query untuk mendapatkan jadwal dan dokter berdasarkan poli terpilih
+            $sqlJadwalDokter = "SELECT jadwal.*, dokter.nama AS nama_dokter 
+                                FROM jadwal_periksa jadwal
+                                JOIN dokter ON jadwal.id_dokter = dokter.id
+                                WHERE dokter.id_poli = $idPoliTerpilih";
+
+            $resultJadwalDokter = mysqli_query($koneksi, $sqlJadwalDokter);
+
+            if (!$resultJadwalDokter) {
+                echo "Gagal mengambil jadwal dan dokter: " . mysqli_error($koneksi);
+            }
+        } else {
+            echo "Gagal mengambil data poli terpilih: " . mysqli_error($koneksi);
+        }
+    }
+}
+
+// Query untuk mendapatkan data poli
+$sqlPoli = "SELECT * FROM poli";
+$resultPoli = mysqli_query($koneksi, $sqlPoli);
+
+if (!$resultPoli) {
+    echo "Gagal mengambil data poli: " . mysqli_error($koneksi);
+}
+
+// Query untuk mendapatkan riwayat daftar poli pasien
+$sqlRiwayatDaftarPoli = "SELECT daftar_poli.*, poli.nama_poli, dokter.nama AS nama_dokter, jadwal.hari, DATE_FORMAT(jadwal.jam_mulai, '%H:%i') AS jam_mulai, DATE_FORMAT(jadwal.jam_selesai, '%H:%i') AS jam_selesai
+                        FROM daftar_poli
+                        JOIN jadwal_periksa jadwal ON daftar_poli.id_jadwal = jadwal.id
+                        JOIN dokter ON jadwal.id_dokter = dokter.id
+                        JOIN poli ON dokter.id_poli = poli.id
+                        WHERE daftar_poli.id_pasien = '$idPasien'";
+
+$resultRiwayatDaftarPoli = mysqli_query($koneksi, $sqlRiwayatDaftarPoli);
+
+if (!$resultRiwayatDaftarPoli) {
+    echo "Gagal mengambil riwayat daftar poli: " . mysqli_error($koneksi);
+}
+
+// Close the database connection
+mysqli_close($koneksi);
 ?>
 
 <!DOCTYPE html>
@@ -19,7 +86,7 @@ include_once("../koneksi.php");
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Dokter | Dashboard</title>
+  <title>Pasien | Dashboard</title>
 
   <!-- Google Font: Source Sans Pro -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
@@ -106,37 +173,12 @@ include_once("../koneksi.php");
           <!-- Add icons to the links using the .nav-icon class
                with font-awesome or any other icon font library -->
           <li class="nav-item menu-open">
-            <a href="#" class="nav-link active">
+            <a href="pasien.php" class="nav-link active">
               <!--<i class="nav-icon fas fa-tachometer-alt"></i>-->
               <p>
-                Pasien
-                <i class="right fas fa-angle-left"></i>
+                Daftar Poli
               </p>
             </a>
-            <ul class="nav nav-treeview">
-              <li class="nav-item">
-                <a href="periksa.php" class="nav-link active">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>Periksa</p>
-                </a>
-              </li>
-            </ul>
-            <ul class="nav nav-treeview">
-              <li class="nav-item">
-                <a href="riwayat_periksa.php" class="nav-link active">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>Riawayat Pasien</p>
-                </a>
-              </li>
-            </ul>
-
-
-          </li>
-      </nav>
-      <nav class="mt-2">
-    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
-        <!-- ... (menu-menu lainnya) ... -->
-
         <!-- Menu Logout -->
         <li class="nav-item">
             <a href="../admin/logout.php" class="nav-link">
@@ -173,9 +215,104 @@ include_once("../koneksi.php");
 
     <!-- Main content -->
     <section class="content">
-      <div class="container-fluid">
-  </div>
+    <div class="container-fluid">
+
+    <div calss = "row">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-header">Pendaftaran Poli</h5>
+            <div class="card-body">
+
+    <form action= ""method="post">
+    <input type="hidden" value="<?= $idPasien ?>" name="idaPsien">
+        <div class="mb-3">    
+    <labe for="no_rm" class="form-label"> Nomor Rekam Medis</label>
+    <input type="text" class="form-control" id="no_rm" placeholder="Nomor Rekam Medis Anda:" name="no_rm" value="<?= $nomorRekamMedis; ?>" readonly>
+    </div>
+    <div class="mb-3">    
+    <label class="form-label">Pilih Poli untuk Melihat Jadwal Dokter</label>
+    <form action="pasien.php" method="post">
+        <select name="id_poli" class="form-control">
+        <option>Pilih poli</option>
+
+            <?php while ($rowPoli = mysqli_fetch_assoc($resultPoli)) : ?>
+                <option value="<?php echo $rowPoli['id']; ?>"><?php echo $rowPoli['nama_poli']; ?></option>
+            <?php endwhile; ?>
+        </select>
+            </div>
+        <input class="btn btn-primary" type="submit" value="Tampilkan Jadwal Dokter">
+    </form>
+
+    <?php if (isset($namaPoliTerpilih)) : ?>
+    <form action="daftar_poli.php" method="post">
+        <input type="hidden" name="id_poli" value="<?php echo $idPoliTerpilih; ?>">
+    </label>
+        <label for="id_jadwal">Pilih Jadwal dan Dokter di <?php echo $namaPoliTerpilih; ?></label><br>
+        <select name="id_jadwal" id="id_jadwal" class="form-control">
+            <?php while ($rowJadwalDokter = mysqli_fetch_assoc($resultJadwalDokter)) : ?>
+                <option value="<?php echo $rowJadwalDokter['id']; ?>">
+                <?php 
+echo $rowJadwalDokter['hari'] . ', ' . date("H:i", strtotime($rowJadwalDokter['jam_mulai'])) . ' - ' . date("H:i", strtotime($rowJadwalDokter['jam_selesai'])) . ' | Dr. ' . $rowJadwalDokter['nama_dokter'];
+?>                </option>
+            <?php endwhile; ?>
+        </select>
+        <div class="mb-3">    
+
+        <label for="keluhan" class="form-label">Keluhan</label>
+        <textarea class="form-control" name="keluhan" id="keluhan" rows="4" cols="50"></textarea>
+        </div>
+
+        <input class="btn btn-primary" type="submit" value="Daftar Poli">
+
+    </form>
+<?php endif; ?>
+</section>
   <!-- /.content-wrapper -->
+  <section class="content">
+    <div class="container-fluid">
+
+    <div calss = "row">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-header">Riwayat Poli</h5>
+            </div>
+            <div class="card-body">
+            <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>No</th>
+                <th>Nama Poli</th>
+                <th>Nama Dokter</th>
+                <th>Hari</th>
+                <th>Jam Mulai</th>
+                <th>Jam Selesai</th>
+                <th>Antrian</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php
+            $counter = 1;
+            while ($rowRiwayatDaftarPoli = mysqli_fetch_assoc($resultRiwayatDaftarPoli)) :
+            ?>
+                <tr>
+                    <td><?php echo $counter; ?></td>
+                    <td><?php echo $rowRiwayatDaftarPoli['nama_poli']; ?></td>
+                    <td><?php echo $rowRiwayatDaftarPoli['nama_dokter']; ?></td>
+                    <td><?php echo $rowRiwayatDaftarPoli['hari']; ?></td>
+                    <td><?php echo $rowRiwayatDaftarPoli['jam_mulai']; ?></td>
+                    <td><?php echo $rowRiwayatDaftarPoli['jam_selesai']; ?></td>
+                    <td><?php echo $rowRiwayatDaftarPoli['no_antrian']; ?></td>
+                </tr>
+            <?php
+                $counter++;
+            endwhile;
+            ?>
+        </tbody>
+    </table>
+            </div>
+        </div>
+    </div>
+</section>
 
   <!-- Control Sidebar -->
   <aside class="control-sidebar control-sidebar-dark">
@@ -218,5 +355,10 @@ include_once("../koneksi.php");
 <script src="../dist/js/adminlte.js"></script>
 <!-- AdminLTE dashboard demo (This is only for demo purposes) -->
 <script src="../dist/js/pages/dashboard.js"></script>
+<script>
+function confirmDelete() {
+    return confirm("Apakah Anda yakin ingin menghapus jadwal periksa ini?");
+}
+</script>
 </body>
 </html>

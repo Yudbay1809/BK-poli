@@ -1,14 +1,4 @@
 <?php
-// Mulai sesi
-session_start();
-
-// Mengecek apakah sesi 'username' dan 'status' diatur
-if (!isset($_SESSION['nip']) || $_SESSION['status'] !== "login") {
-    // Jika sesi tidak diatur atau status bukan "login", arahkan pengguna ke halaman login
-    $_SESSION["login_error"] = "Anda harus login terlebih dahulu.";
-    header("Location: login.php");
-    exit();
-}
 
 include_once("../koneksi.php");
 
@@ -106,37 +96,25 @@ include_once("../koneksi.php");
           <!-- Add icons to the links using the .nav-icon class
                with font-awesome or any other icon font library -->
           <li class="nav-item menu-open">
-            <a href="#" class="nav-link active">
+            <a href="jadwal/jadwal_periksa.php" class="nav-link active">
               <!--<i class="nav-icon fas fa-tachometer-alt"></i>-->
               <p>
-                Pasien
-                <i class="right fas fa-angle-left"></i>
+                Jadwal Periksa
               </p>
             </a>
-            <ul class="nav nav-treeview">
-              <li class="nav-item">
-                <a href="periksa.php" class="nav-link active">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>Periksa</p>
-                </a>
-              </li>
-            </ul>
-            <ul class="nav nav-treeview">
-              <li class="nav-item">
-                <a href="riwayat_periksa.php" class="nav-link active">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>Riawayat Pasien</p>
-                </a>
-              </li>
-            </ul>
-
-
-          </li>
-      </nav>
-      <nav class="mt-2">
-    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
-        <!-- ... (menu-menu lainnya) ... -->
-
+            <li class="nav-item menu-open">
+            <a href="periksa/m_pasien.php" class="nav-link active">
+              <!--<i class="nav-icon fas fa-tachometer-alt"></i>-->
+              <p>
+                Memeriksa Pasien
+              </p>
+            </a>
+            <a href="riwayat/riwayat.php" class="nav-link active">
+              <!--<i class="nav-icon fas fa-tachometer-alt"></i>-->
+              <p>
+                Riwayat Pasien
+              </p>
+            </a>
         <!-- Menu Logout -->
         <li class="nav-item">
             <a href="../admin/logout.php" class="nav-link">
