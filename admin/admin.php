@@ -149,6 +149,20 @@ include_once("../koneksi.php");
               </li>
             </ul>
           </li>
+          <a href="#" class="nav-link active">              
+              <p>
+                Pasien
+                <i class="right fas fa-angle-left"></i>
+              </p>
+            </a>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="pasien/pasien.php" class="nav-link active">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Kelola Pasien</p>
+                </a>
+              </li>
+            </ul>
       </nav>
       <nav class="mt-2">
     <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">

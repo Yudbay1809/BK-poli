@@ -81,7 +81,7 @@ include_once("../../koneksi.php");
       <nav class="mt-2">
         <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
               <li class="nav-item">
-                <a href="obat.php" class="nav-link active">
+                <a href="../obat/obat.php" class="nav-link active">
                   <p>Obat</p>
                 </a>
               </li>
@@ -99,6 +99,14 @@ include_once("../../koneksi.php");
               <li class="nav-item">
                 <a href="../poli/poli.php" class="nav-link active">
                   <p>Poli</p>
+                </a>
+              </li>
+            </ul>
+          </li>
+          <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+              <li class="nav-item">
+                <a href="../pasien/pasien.php" class="nav-link active">
+                  <p>Pasien</p>
                 </a>
               </li>
             </ul>
