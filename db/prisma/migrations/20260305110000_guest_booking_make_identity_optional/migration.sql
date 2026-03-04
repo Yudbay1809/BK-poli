@@ -1,0 +1,2 @@
+ALTER TABLE "GuestBooking" ALTER COLUMN "noKtp" DROP NOT NULL;
+ALTER TABLE "GuestBooking" ALTER COLUMN "tanggalLahir" DROP NOT NULL;

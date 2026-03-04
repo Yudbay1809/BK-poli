@@ -1,0 +1,212 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  DOKTER
+  PASIEN
+}
+
+enum DaftarPoliStatus {
+  MENUNGGU
+  DIPANGGIL
+  SELESAI
+  BATAL
+}
+
+enum GuestBookingStatus {
+  PENDING_OTP
+  VERIFIED
+  CONFIRMED
+  CANCELLED
+  EXPIRED
+}
+
+enum PaymentMethod {
+  UMUM
+  BPJS
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  username     String   @unique
+  name         String
+  passwordHash String
+  role         Role
+  isActive     Boolean  @default(true)
+  sessionVersion Int    @default(0)
+  lastLoginAt  DateTime?
+  deactivatedAt DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  dokter Dokter?
+  pasien Pasien?
+
+  auditLogs AuditLog[] @relation("ActorAuditLogs")
+}
+
+model Poli {
+  id         Int      @id @default(autoincrement())
+  namaPoli   String
+  keterangan String?
+  dokterPolis DokterPoli[]
+  jadwals    JadwalPeriksa[]
+  guestBookings GuestBooking[]
+}
+
+model Dokter {
+  id        Int             @id @default(autoincrement())
+  userId    Int             @unique
+  nip       String          @unique
+  alamat    String?
+  noHp      String?
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dokterPolis DokterPoli[]
+  jadwals   JadwalPeriksa[]
+}
+
+model DokterPoli {
+  dokterId Int
+  poliId   Int
+  dokter   Dokter @relation(fields: [dokterId], references: [id], onDelete: Cascade)
+  poli     Poli   @relation(fields: [poliId], references: [id], onDelete: Cascade)
+
+  @@id([dokterId, poliId])
+}
+
+model Pasien {
+  id             Int          @id @default(autoincrement())
+  userId         Int          @unique
+  noRm           String       @unique
+  noKtp          String       @unique
+  alamat         String?
+  noHp           String?
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  daftarPoliList DaftarPoli[]
+}
+
+model JadwalPeriksa {
+  id          Int         @id @default(autoincrement())
+  dokterId    Int
+  poliId      Int
+  hari        String
+  jamMulai    DateTime
+  jamSelesai  DateTime
+  dokter      Dokter      @relation(fields: [dokterId], references: [id], onDelete: Cascade)
+  poli        Poli        @relation(fields: [poliId], references: [id], onDelete: Restrict)
+  daftarPolis DaftarPoli[]
+  guestBookings GuestBooking[]
+}
+
+model DaftarPoli {
+  id         Int           @id @default(autoincrement())
+  pasienId   Int
+  jadwalId   Int
+  keluhan    String
+  noAntrian  Int
+  status     DaftarPoliStatus @default(MENUNGGU)
+  createdAt  DateTime      @default(now())
+  pasien     Pasien        @relation(fields: [pasienId], references: [id], onDelete: Cascade)
+  jadwal     JadwalPeriksa @relation(fields: [jadwalId], references: [id], onDelete: Cascade)
+  periksa    Periksa?
+}
+
+model Periksa {
+  id            Int             @id @default(autoincrement())
+  daftarPoliId  Int             @unique
+  tglPeriksa    DateTime        @default(now())
+  catatan       String?
+  biayaPeriksa  Int             @default(0)
+  daftarPoli    DaftarPoli      @relation(fields: [daftarPoliId], references: [id], onDelete: Cascade)
+  details       DetailPeriksa[]
+}
+
+model Obat {
+  id         Int             @id @default(autoincrement())
+  namaObat   String
+  kemasan    String?
+  harga      Int             @default(0)
+  details    DetailPeriksa[]
+}
+
+model DetailPeriksa {
+  id        Int      @id @default(autoincrement())
+  periksaId Int
+  obatId    Int
+  periksa   Periksa  @relation(fields: [periksaId], references: [id], onDelete: Cascade)
+  obat      Obat     @relation(fields: [obatId], references: [id], onDelete: Restrict)
+}
+
+model AuditLog {
+  id          Int      @id @default(autoincrement())
+  actorUserId Int
+  action      String
+  entityType  String
+  entityId    String
+  metaJson    String?
+  createdAt   DateTime @default(now())
+
+  actor User @relation("ActorAuditLogs", fields: [actorUserId], references: [id], onDelete: Cascade)
+}
+
+model AppConfig {
+  id               Int      @id
+  clinicName       String   @default("BK Poli")
+  weekdayHours     String   @default("Senin - Jumat: 08.00 - 20.00")
+  saturdayHours    String   @default("Sabtu: 08.00 - 14.00")
+  holidayHours     String   @default("Minggu/Hari Libur: Tutup")
+  contactPhone     String   @default("(021) 555-0188")
+  contactWhatsapp  String   @default("0812-0000-8899")
+  contactEmail     String   @default("layanan@bkpoli.local")
+  updatedAt        DateTime @updatedAt
+}
+
+model GuestBooking {
+  id            Int                @id @default(autoincrement())
+  bookingCode   String             @unique
+  nama          String
+  noKtp         String?
+  tanggalLahir  DateTime?
+  noHp          String
+  paymentMethod PaymentMethod       @default(UMUM)
+  bpjsNumber    String?
+  keluhan       String
+  poliId        Int
+  jadwalId      Int
+  status        GuestBookingStatus @default(PENDING_OTP)
+  queueNumber   Int?
+  otpVerifiedAt DateTime?
+  expiresAt     DateTime
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  poli          Poli               @relation(fields: [poliId], references: [id], onDelete: Restrict)
+  jadwal        JadwalPeriksa      @relation(fields: [jadwalId], references: [id], onDelete: Restrict)
+  otpRequests   GuestOtp[]
+
+  @@index([jadwalId, status])
+  @@index([noKtp, jadwalId])
+}
+
+model GuestOtp {
+  id           Int          @id @default(autoincrement())
+  bookingId    Int
+  otpHash      String
+  attemptCount Int          @default(0)
+  expiresAt    DateTime
+  verifiedAt   DateTime?
+  createdAt    DateTime     @default(now())
+
+  booking      GuestBooking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId, createdAt])
+}

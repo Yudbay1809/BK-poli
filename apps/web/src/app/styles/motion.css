@@ -1,0 +1,200 @@
+.route-progress-wrap {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  z-index: 80;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+
+.route-progress-wrap::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--bg-soft) 45%, transparent);
+  backdrop-filter: blur(2px);
+}
+
+.route-progress-wrap.is-active {
+  opacity: 1;
+}
+
+.route-progress-bar {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-origin: left center;
+  border-radius: 0 999px 999px 0;
+  background: linear-gradient(92deg, var(--primary) 0%, #2ec4b6 42%, #89f0ff 100%);
+  box-shadow:
+    0 0 14px color-mix(in srgb, var(--primary) 64%, transparent),
+    0 0 28px color-mix(in srgb, #2ec4b6 38%, transparent);
+  transition: transform 0.13s ease-out;
+  will-change: transform;
+}
+
+.route-progress-bar::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: -2px;
+  width: 38px;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, #ffffffc9);
+  filter: blur(0.2px);
+}
+
+.route-progress-wrap.is-active .route-progress-bar {
+  animation: routeProgressShift 1.15s linear infinite;
+}
+
+.page-enter {
+  animation: pageIn 0.35s ease-out;
+}
+
+.page-enter > * {
+  opacity: 0;
+  transform: translateY(8px);
+  animation: sectionReveal 0.45s ease-out forwards;
+}
+
+.page-enter > *:nth-child(1) { animation-delay: 0.02s; }
+.page-enter > *:nth-child(2) { animation-delay: 0.06s; }
+.page-enter > *:nth-child(3) { animation-delay: 0.1s; }
+.page-enter > *:nth-child(4) { animation-delay: 0.14s; }
+.page-enter > *:nth-child(5) { animation-delay: 0.18s; }
+.page-enter > *:nth-child(6) { animation-delay: 0.22s; }
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .data-table tbody tr {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+  }
+
+  .route-progress-wrap,
+  .route-progress-bar {
+    transition: none !important;
+  }
+
+  .route-progress-wrap.is-active .route-progress-bar {
+    animation: none !important;
+  }
+
+  .page-enter > * {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+  }
+
+  section,
+  aside,
+  article,
+  .panel-like,
+  .top-nav a,
+  button,
+  button::after,
+  input,
+  textarea,
+  select {
+    transition: none !important;
+  }
+
+  section:hover,
+  aside:hover,
+  article:hover,
+  .panel-like:hover,
+  .top-nav a:hover,
+  button:hover {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+}
+
+@keyframes rowIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pageIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes sectionReveal {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes toastProgress {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+@keyframes routeProgressShift {
+  from {
+    filter: saturate(1);
+  }
+  50% {
+    filter: saturate(1.22);
+  }
+  to {
+    filter: saturate(1);
+  }
+}

@@ -1,0 +1,237 @@
+.page {
+  max-width: 1120px;
+  margin: 24px auto 40px;
+  padding: 0 12px;
+  display: grid;
+  gap: 16px;
+}
+
+.hero {
+  border: 1px solid color-mix(in srgb, var(--primary) 16%, var(--border) 84%);
+  border-radius: 20px;
+  padding: 18px;
+  background:
+    radial-gradient(780px 220px at -8% -28%, color-mix(in srgb, var(--primary) 18%, transparent), transparent 58%),
+    linear-gradient(
+      125deg,
+      color-mix(in srgb, var(--bg-soft) 90%, #dff5ff 10%) 0%,
+      color-mix(in srgb, var(--bg-soft) 95%, #f8ffef 5%) 100%
+    );
+  box-shadow:
+    0 1px 0 color-mix(in srgb, #fff 62%, transparent),
+    0 14px 30px color-mix(in srgb, #1f2937 11%, transparent);
+  display: grid;
+  gap: 12px;
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(1.6rem, 3.1vw, 2.3rem);
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+}
+
+.subtitle {
+  margin: 8px 0 0;
+  max-width: 760px;
+  color: var(--text-muted);
+  font-size: 0.96rem;
+}
+
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.primaryLink,
+.ghostLink,
+.resetLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  font-weight: 700;
+  border-radius: 10px;
+  padding: 9px 12px;
+}
+
+.primaryLink {
+  color: #fff;
+  background: linear-gradient(110deg, var(--primary), color-mix(in srgb, var(--primary) 80%, #2ec4b6 20%));
+  border: 1px solid color-mix(in srgb, var(--primary) 72%, #000 28%);
+}
+
+.ghostLink,
+.resetLink {
+  color: var(--text);
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg-soft) 88%, transparent);
+}
+
+.resetButton {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 9px 12px;
+  font-weight: 700;
+  color: var(--text);
+  background: color-mix(in srgb, var(--bg-soft) 88%, transparent);
+  box-shadow: none;
+}
+
+.resetButton:hover {
+  transform: translateY(-1px);
+  filter: none;
+  box-shadow: none;
+}
+
+.filterCard,
+.resultCard {
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background:
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--bg-soft) 93%, #f0f9ff 7%) 0%,
+      color-mix(in srgb, var(--bg-soft) 97%, #ffffff 3%) 100%
+    );
+  box-shadow:
+    0 1px 0 color-mix(in srgb, #fff 62%, transparent),
+    0 14px 30px color-mix(in srgb, #1f2937 11%, transparent);
+  padding: 14px;
+}
+
+.filterForm {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr auto;
+  gap: 10px;
+  align-items: end;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+  font-size: 0.84rem;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.field input,
+.field select {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 11px;
+  font-size: 0.92rem;
+  background: color-mix(in srgb, var(--bg-soft) 90%, transparent);
+  color: var(--text);
+}
+
+.filterActions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.resultHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.resultHead h2 {
+  margin: 0;
+  font-size: 1.06rem;
+}
+
+.countBadge {
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--primary) 28%, var(--border) 72%);
+  background: color-mix(in srgb, var(--bg-soft) 82%, var(--primary) 18%);
+  color: var(--text);
+  padding: 4px 10px;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.tableOnly {
+  display: block;
+}
+
+.mobileList {
+  display: none;
+}
+
+.mobileCard {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 11px;
+  background: color-mix(in srgb, var(--bg-soft) 92%, transparent);
+  display: grid;
+  gap: 6px;
+}
+
+.mobileHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.mobileNo {
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--primary) 26%, var(--border) 74%);
+  background: color-mix(in srgb, var(--bg-soft) 84%, var(--primary) 16%);
+  padding: 2px 8px;
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+.mobileMeta {
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.mobileTime {
+  margin: 0;
+  font-weight: 700;
+  color: var(--text);
+}
+
+@media (max-width: 900px) {
+  .filterForm {
+    grid-template-columns: 1fr;
+  }
+
+  .filterActions {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 720px) {
+  .page {
+    margin-top: 14px;
+    gap: 14px;
+  }
+
+  .hero,
+  .filterCard,
+  .resultCard {
+    border-radius: 16px;
+    padding: 12px;
+  }
+
+  .tableOnly {
+    display: none;
+  }
+
+  .mobileList {
+    display: grid;
+    gap: 8px;
+  }
+}

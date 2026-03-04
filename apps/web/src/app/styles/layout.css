@@ -1,0 +1,126 @@
+.layout-container {
+  max-width: 1120px;
+  margin: 20px auto 34px;
+  padding: 0 12px;
+  display: grid;
+  gap: 16px;
+}
+
+.layout-container-wide {
+  max-width: 1220px;
+  margin: 20px auto 34px;
+  padding: 0 12px;
+  display: grid;
+  gap: 16px;
+}
+
+.flow-sm { display: grid; gap: 10px; }
+.flow-md { display: grid; gap: 14px; }
+.flow-lg { display: grid; gap: 20px; }
+
+.app-title {
+  margin: 0;
+  font-size: clamp(1.55rem, 2.4vw, 2.2rem);
+  line-height: 1.16;
+}
+
+.app-subtitle {
+  margin: 0;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.stats-card {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px;
+  background: color-mix(in srgb, var(--bg-soft) 88%, var(--primary) 12%);
+  box-shadow: var(--shadow);
+}
+
+.stats-label {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-muted);
+}
+
+.stats-value {
+  margin-top: 4px;
+  font-size: 1.45rem;
+  font-weight: 800;
+}
+
+.sidebar-layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 18px;
+}
+
+.sidebar {
+  align-self: start;
+  position: sticky;
+  top: 74px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px;
+  background: color-mix(in srgb, var(--bg-soft) 90%, var(--primary) 10%);
+  box-shadow: var(--shadow);
+}
+
+.sidebar h3 {
+  margin: 0 0 10px;
+}
+
+.sidebar-nav {
+  display: grid;
+  gap: 6px;
+}
+
+.sidebar-nav a {
+  text-decoration: none;
+  color: var(--text-muted);
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-weight: 600;
+  transition: background-color 0.14s ease, color 0.14s ease, transform 0.14s ease;
+}
+
+.sidebar-nav a:hover {
+  background: color-mix(in srgb, var(--bg-soft) 72%, var(--primary) 14%);
+  color: var(--text);
+  transform: translateX(1px);
+}
+
+.quick-list {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 6px;
+}
+
+@media (max-width: 760px) {
+  .sidebar-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: static;
+    top: auto;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  main.flow-lg,
+  main.flow-md {
+    gap: 14px !important;
+  }
+}
+
+

@@ -1,0 +1,125 @@
+.form-layout {
+  display: grid;
+  gap: 10px;
+}
+
+.form-layout-compact {
+  display: grid;
+  gap: 6px;
+}
+
+.form-field {
+  display: grid;
+  gap: 6px;
+  font-size: 0.92rem;
+  color: var(--text-muted);
+}
+
+.form-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.table-action-group {
+  display: grid;
+  gap: 6px;
+}
+
+.action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.space-bottom-sm {
+  margin-bottom: 12px;
+}
+
+.space-left-xs {
+  margin-left: 8px;
+}
+
+.space-left-sm {
+  margin-left: 10px;
+}
+
+main.flow-lg > section > h3,
+main.flow-md > section > h3 {
+  margin: 0 0 8px;
+}
+
+main[style*="display:grid"] > section > h3,
+main[style*="display: grid"] > section > h3 {
+  margin: 0 0 8px;
+}
+
+main.flow-lg form label,
+main.flow-md form label {
+  display: grid;
+  gap: 6px;
+  color: var(--text-muted);
+  font-size: 0.92rem;
+}
+
+main[style*="display:grid"] form label,
+main[style*="display: grid"] form label {
+  display: grid;
+  gap: 6px;
+  color: var(--text-muted);
+  font-size: 0.92rem;
+}
+
+main.flow-lg form input,
+main.flow-lg form select,
+main.flow-lg form textarea,
+main.flow-md form input,
+main.flow-md form select,
+main.flow-md form textarea {
+  max-width: 100%;
+}
+
+main[style*="display:grid"] form input,
+main[style*="display:grid"] form select,
+main[style*="display:grid"] form textarea,
+main[style*="display: grid"] form input,
+main[style*="display: grid"] form select,
+main[style*="display: grid"] form textarea {
+  max-width: 100%;
+}
+
+@media (max-width: 760px) {
+  .form-toolbar {
+    display: grid;
+    gap: 8px;
+  }
+
+  .form-toolbar > * {
+    width: 100%;
+  }
+
+  .action-row {
+    display: grid;
+  }
+
+  .space-left-xs,
+  .space-left-sm {
+    margin-left: 0;
+  }
+
+  main.flow-lg form[method="get"],
+  main.flow-md form[method="get"] {
+    display: grid !important;
+    gap: 8px !important;
+    margin-bottom: 12px;
+  }
+
+  main.flow-lg form[method="get"] > *,
+  main.flow-md form[method="get"] > * {
+    width: 100% !important;
+    margin-left: 0 !important;
+  }
+}
+
