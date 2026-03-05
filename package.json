@@ -4,8 +4,8 @@
   "packageManager": "pnpm@10.0.0",
   "scripts": {
     "dev": "pnpm --filter web dev",
-    "build": "pnpm --dir db db:generate && pnpm --filter web build",
-    "vercel-build": "pnpm --dir db db:generate && pnpm --filter web build",
+    "build": "pnpm --filter web build",
+    "vercel-build": "pnpm --filter web build",
     "start": "pnpm --filter web start",
     "db:generate": "pnpm --dir db db:generate",
     "db:migrate": "pnpm --dir db db:migrate",

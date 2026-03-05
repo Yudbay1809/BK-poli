@@ -53,6 +53,9 @@ jobs:
       - name: Apply Prisma migrations
         run: pnpm db:migrate:deploy
 
+      - name: Generate Prisma client
+        run: pnpm db:generate
+
       - name: Lint
         run: pnpm --filter web lint
 

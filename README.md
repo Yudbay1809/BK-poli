@@ -30,7 +30,10 @@ Monorepo baru ditambahkan:
 
 Repo ini sudah disiapkan untuk deploy dari root monorepo menggunakan `vercel.json`:
 - install: `pnpm install --frozen-lockfile`
-- build: `pnpm vercel-build` (otomatis `prisma generate` lalu `next build`)
+- build deploy: `pnpm vercel-build` (`next build`)
+- build lokal: `pnpm build` (langsung `next build`)
+
+`prisma generate` otomatis dijalankan pada fase install package `db` (script `postinstall`).
 
 ### 1. Buat database PostgreSQL production
 Gunakan provider PostgreSQL yang public (Neon, Supabase, Railway, RDS, dll), lalu ambil connection string `DATABASE_URL`.

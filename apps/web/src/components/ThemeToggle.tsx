@@ -62,6 +62,7 @@ export default function ThemeToggle() {
       onClick={toggleTheme}
       aria-label="Ganti mode tampilan"
       title="Ganti mode tampilan"
+      suppressHydrationWarning
     >
       {theme === "light" ? "Dark Mode" : "Day Mode"}
     </button>
