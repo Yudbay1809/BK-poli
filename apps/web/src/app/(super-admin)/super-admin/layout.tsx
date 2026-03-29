@@ -17,7 +17,7 @@ const menus = [
 export default function SuperAdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="layout-container-wide sidebar-layout">
-      <aside className="sidebar">
+      <aside className="sidebar sidebar--admin">
         <h3>Super Admin</h3>
         <nav className="sidebar-nav">
           {menus.map((menu) => (

@@ -3,11 +3,6 @@ import type { Route } from "next";
 
 const menus = [
   { href: "/admin", label: "Dashboard" },
-  { href: "/admin/laporan", label: "Laporan Dasar" },
-  { href: "/admin/import", label: "Import Data" },
-  { href: "/admin/bpjs", label: "Manajemen BPJS" },
-  { href: "/admin/libur", label: "Jadwal Libur" },
-  { href: "/admin/pembayaran", label: "Pembayaran" },
   { href: "/admin/poli", label: "Kelola Poli" },
   { href: "/admin/obat", label: "Kelola Obat" },
   { href: "/admin/dokter", label: "Kelola Dokter" },
@@ -15,12 +10,13 @@ const menus = [
   { href: "/admin/jadwal", label: "Kelola Jadwal" },
   { href: "/admin/antrian", label: "Kelola Antrian" },
   { href: "/admin/pemeriksaan", label: "Kelola Pemeriksaan" },
+  { href: "/admin/pembayaran", label: "Pembayaran" },
 ] as const;
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="layout-container-wide sidebar-layout">
-      <aside className="sidebar">
+      <aside className="sidebar sidebar--admin">
         <h3>Admin</h3>
         <nav className="sidebar-nav">
           {menus.map((menu) => (

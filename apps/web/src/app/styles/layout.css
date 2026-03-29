@@ -68,7 +68,7 @@
   border: 1px solid var(--border);
   border-radius: 14px;
   padding: 12px;
-  background: color-mix(in srgb, var(--bg-soft) 90%, var(--primary) 10%);
+  background: color-mix(in srgb, var(--bg-soft) 90%, var(--sidebar-accent, var(--primary)) 10%);
   box-shadow: var(--shadow);
 }
 
@@ -91,9 +91,21 @@
 }
 
 .sidebar-nav a:hover {
-  background: color-mix(in srgb, var(--bg-soft) 72%, var(--primary) 14%);
+  background: color-mix(in srgb, var(--bg-soft) 72%, var(--sidebar-accent, var(--primary)) 14%);
   color: var(--text);
   transform: translateX(1px);
+}
+
+.sidebar--admin {
+  --sidebar-accent: #0ea5e9;
+}
+
+.sidebar--dokter {
+  --sidebar-accent: #22c55e;
+}
+
+.sidebar--pasien {
+  --sidebar-accent: #f59e0b;
 }
 
 .quick-list {

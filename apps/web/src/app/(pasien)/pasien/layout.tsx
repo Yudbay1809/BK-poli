@@ -13,7 +13,7 @@ const menus = [
 export default function PasienLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="layout-container-wide sidebar-layout">
-      <aside className="sidebar">
+      <aside className="sidebar sidebar--pasien">
         <h3>Pasien</h3>
         <nav className="sidebar-nav">
           {menus.map((menu) => (
