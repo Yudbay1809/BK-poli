@@ -2,5 +2,5 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
   "installCommand": "pnpm install --frozen-lockfile",
-  "buildCommand": "pnpm vercel-build && cp -r apps/web/.next .next"
+  "buildCommand": "node -e \"const fs=require('fs'); const p='node_modules/client-only/index.js'; if(!fs.existsSync(p)){ fs.mkdirSync('node_modules/client-only',{recursive:true}); fs.writeFileSync(p,'module.exports = {}'); }\" && pnpm vercel-build && cp -r apps/web/.next .next"
 }
