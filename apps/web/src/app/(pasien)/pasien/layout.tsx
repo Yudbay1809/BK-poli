@@ -3,6 +3,7 @@ import type { Route } from "next";
 
 const menus = [
   { href: "/pasien", label: "Dashboard" },
+  { href: "/pasien/profil", label: "Profil" },
   { href: "/pasien/daftar-poli", label: "Daftar Poli" },
   { href: "/pasien/riwayat", label: "Riwayat Kunjungan" },
 ] as const;

@@ -1,5 +1,7 @@
 import { randomBytes } from "node:crypto";
+import bcrypt from "bcryptjs";
 import { redirect } from "next/navigation";
+import type { Route } from "next";
 import { GuestBookingStatus, PaymentMethod } from "@bk-poli/db";
 import { prisma } from "@/lib/prisma";
 import PaymentMethodFields from "@/components/PaymentMethodFields";
@@ -20,6 +22,10 @@ function formatTime(date: Date) {
 
 function buildCode() {
   return `BK-${randomBytes(4).toString("hex").toUpperCase()}`;
+}
+
+function buildOtp() {
+  return String(Math.floor(100000 + Math.random() * 900000));
 }
 
 function queueDensity(totalQueue: number) {
@@ -129,23 +135,14 @@ export default async function DaftarPengobatanPage({ searchParams }: PageProps) 
       redirect("/daftar-pengobatan?err=Jadwal%20tidak%20ditemukan");
     }
 
-    const [existingPasien, existingGuest] = await Promise.all([
-      prisma.daftarPoli.aggregate({
-        where: { jadwalId },
-        _max: { noAntrian: true },
-      }),
-      prisma.guestBooking.aggregate({
-        where: { jadwalId, status: { in: [GuestBookingStatus.CONFIRMED, GuestBookingStatus.VERIFIED] } },
-        _max: { queueNumber: true },
-      }),
-    ]);
-    const queueNumber = Math.max(existingPasien._max.noAntrian ?? 0, existingGuest._max.queueNumber ?? 0) + 1;
+    const otpCode = buildOtp();
+    const otpHash = await bcrypt.hash(otpCode, 10);
 
     let bookingCode = "";
     for (let i = 0; i < 5; i += 1) {
       const candidate = buildCode();
       try {
-        await prisma.guestBooking.create({
+        const booking = await prisma.guestBooking.create({
           data: {
             bookingCode: candidate,
             nama,
@@ -156,10 +153,17 @@ export default async function DaftarPengobatanPage({ searchParams }: PageProps) 
             keluhan,
             poliId: jadwal.poliId,
             jadwalId,
-            status: GuestBookingStatus.CONFIRMED,
-            queueNumber,
-            otpVerifiedAt: new Date(),
+            status: GuestBookingStatus.PENDING_OTP,
+            queueNumber: null,
+            otpVerifiedAt: null,
             expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+          },
+        });
+        await prisma.guestOtp.create({
+          data: {
+            bookingId: booking.id,
+            otpHash,
+            expiresAt: new Date(Date.now() + 10 * 60 * 1000),
           },
         });
         bookingCode = candidate;
@@ -173,11 +177,12 @@ export default async function DaftarPengobatanPage({ searchParams }: PageProps) 
       redirect("/daftar-pengobatan?err=Gagal%20membuat%20booking,%20silakan%20coba%20lagi");
     }
 
-    redirect(
-      `/daftar-pengobatan?msg=${encodeURIComponent("Pendaftaran berhasil, simpan kode booking Anda.")}&code=${encodeURIComponent(
-        bookingCode
-      )}&queue=${queueNumber}`
-    );
+    const base = `/verifikasi-booking?msg=${encodeURIComponent("Kode booking dibuat. Masukkan OTP yang dikirim ke nomor Anda.")}&code=${encodeURIComponent(
+      bookingCode
+    )}`;
+    const withOtp = process.env.NODE_ENV !== "production" ? `${base}&otp=${otpCode}` : base;
+    const redirectTo = withOtp as Route;
+    redirect(redirectTo);
   }
 
   return (

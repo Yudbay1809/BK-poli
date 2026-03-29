@@ -8,7 +8,7 @@ export async function getCurrentPasienContext() {
 
   const pasien = await prisma.pasien.findUnique({
     where: { userId },
-    include: { user: { select: { id: true, name: true, email: true } } },
+    include: { user: { select: { id: true, name: true, email: true, username: true } } },
   });
 
   if (!pasien) {

@@ -3,6 +3,8 @@ import type { Route } from "next";
 
 const menus = [
   { href: "/admin", label: "Dashboard" },
+  { href: "/admin/laporan", label: "Laporan Dasar" },
+  { href: "/admin/import", label: "Import Data" },
   { href: "/admin/poli", label: "Kelola Poli" },
   { href: "/admin/obat", label: "Kelola Obat" },
   { href: "/admin/dokter", label: "Kelola Dokter" },

@@ -60,6 +60,7 @@ export default async function PasienRiwayatPage({ searchParams }: PageProps) {
               <th >Catatan Dokter</th>
               <th >Biaya Periksa</th>
               <th >Obat</th>
+              <th >Detail</th>
             </tr>
           </thead>
           <tbody>
@@ -81,6 +82,9 @@ export default async function PasienRiwayatPage({ searchParams }: PageProps) {
                     {r.periksa?.details.length
                       ? r.periksa.details.map((d) => d.obat.namaObat).join(", ")
                       : "-"}
+                  </td>
+                  <td >
+                    <a href={`/pasien/riwayat/${r.id}`}>Lihat</a>
                   </td>
                 </tr>
               ))}
