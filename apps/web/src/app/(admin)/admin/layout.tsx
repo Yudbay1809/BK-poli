@@ -1,5 +1,9 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import type { Route } from "next";
+import { redirect } from "next/navigation";
+
+import { auth } from "@/auth";
+import { getDefaultRouteByRole } from "@/lib/role-route";
 
 const menus = [
   { href: "/admin", label: "Dashboard" },
@@ -13,7 +17,18 @@ const menus = [
   { href: "/admin/pembayaran", label: "Pembayaran" },
 ] as const;
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  const session = await auth();
+  const role = session?.user?.role;
+
+  if (!role) {
+    redirect("/login");
+  }
+
+  if (role !== "ADMIN" && role !== "SUPER_ADMIN") {
+    redirect(getDefaultRouteByRole(role));
+  }
+
   return (
     <div className="layout-container-wide sidebar-layout">
       <aside className="sidebar sidebar--admin">
@@ -30,4 +45,3 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     </div>
   );
 }
-

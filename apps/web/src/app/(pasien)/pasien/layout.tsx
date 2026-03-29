@@ -1,5 +1,9 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import type { Route } from "next";
+import { redirect } from "next/navigation";
+
+import { auth } from "@/auth";
+import { getDefaultRouteByRole } from "@/lib/role-route";
 
 const menus = [
   { href: "/pasien", label: "Dashboard" },
@@ -10,7 +14,18 @@ const menus = [
   { href: "/pasien/dokumen", label: "Dokumen" },
 ] as const;
 
-export default function PasienLayout({ children }: { children: React.ReactNode }) {
+export default async function PasienLayout({ children }: { children: React.ReactNode }) {
+  const session = await auth();
+  const role = session?.user?.role;
+
+  if (!role) {
+    redirect("/login");
+  }
+
+  if (role !== "PASIEN") {
+    redirect(getDefaultRouteByRole(role));
+  }
+
   return (
     <div className="layout-container-wide sidebar-layout">
       <aside className="sidebar sidebar--pasien">
@@ -27,4 +42,3 @@ export default function PasienLayout({ children }: { children: React.ReactNode }
     </div>
   );
 }
-

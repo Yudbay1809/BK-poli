@@ -11,9 +11,6 @@ const nextConfig = {
   outputFileTracingExcludes: {
     "*": ["**/node_modules/client-only/**"],
   },
-  experimental: {
-    outputFileTracingRoot: path.join(__dirname, "../../"),
-  },
 };
 
 export default nextConfig;

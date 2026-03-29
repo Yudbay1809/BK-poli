@@ -1,5 +1,9 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import type { Route } from "next";
+import { redirect } from "next/navigation";
+
+import { auth } from "@/auth";
+import { getDefaultRouteByRole } from "@/lib/role-route";
 
 const menus = [
   { href: "/super-admin", label: "Dashboard" },
@@ -14,7 +18,18 @@ const menus = [
   { href: "/super-admin/permissions", label: "RBAC Matrix" },
 ] as const;
 
-export default function SuperAdminLayout({ children }: { children: React.ReactNode }) {
+export default async function SuperAdminLayout({ children }: { children: React.ReactNode }) {
+  const session = await auth();
+  const role = session?.user?.role;
+
+  if (!role) {
+    redirect("/login");
+  }
+
+  if (role !== "SUPER_ADMIN") {
+    redirect(getDefaultRouteByRole(role));
+  }
+
   return (
     <div className="layout-container-wide sidebar-layout">
       <aside className="sidebar sidebar--admin">
@@ -31,4 +46,3 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
     </div>
   );
 }
-
