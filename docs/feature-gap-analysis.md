@@ -97,6 +97,6 @@ Dokumen ini menyimpan daftar fitur yang belum ada per role, prioritas fitur dokt
 - Login super admin.
 - Buat admin baru.
 - Reset password user.
-- Nonaktifkan user.
-- Force logout user.
-- Audit log tercatat.
+- [x] Nonaktifkan user.
+- [x] Force logout user.
+- [x] Audit log tercatat.
