@@ -3,7 +3,8 @@
   "private": true,
   "packageManager": "pnpm@10.0.0",
   "devDependencies": {
-    "next": "16.1.6"
+    "next": "16.1.6",
+    "client-only": "0.0.1"
   },
   "scripts": {
     "dev": "pnpm --filter web dev",
