@@ -1,3 +1,4 @@
+import bcrypt from "bcryptjs";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
@@ -49,6 +50,37 @@ export default async function PasienProfilPage({ searchParams }: PageProps) {
     }
   }
 
+  async function changePasswordAction(formData: FormData) {
+    "use server";
+    const { session } = await getCurrentPasienContext();
+    const userId = Number(session.user.id);
+    const oldPassword = String(formData.get("oldPassword") ?? "");
+    const newPassword = String(formData.get("newPassword") ?? "");
+    const confirmPassword = String(formData.get("confirmPassword") ?? "");
+
+    if (newPassword.length < 8 || newPassword !== confirmPassword) {
+      redirect("/pasien/profil?err=Password%20baru%20tidak%20valid");
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      redirect("/pasien/profil?err=User%20tidak%20ditemukan");
+    }
+
+    const ok = await bcrypt.compare(oldPassword, user.passwordHash);
+    if (!ok) {
+      redirect("/pasien/profil?err=Password%20lama%20tidak%20sesuai");
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, 12);
+    await prisma.user.update({
+      where: { id: userId },
+      data: { passwordHash, sessionVersion: { increment: 1 } },
+    });
+
+    redirect("/login?msg=Password%20berhasil%20diubah.%20Silakan%20login%20ulang.");
+  }
+
   return (
     <main className="flow-md">
       <h1 className="app-title">Profil Pasien</h1>
@@ -84,6 +116,25 @@ export default async function PasienProfilPage({ searchParams }: PageProps) {
         </label>
         <button type="submit">Simpan Profil</button>
       </form>
+
+      <section className="flow-sm">
+        <h3>Ganti Password</h3>
+        <form action={changePasswordAction} className="form-layout" style={{ maxWidth: 520 }}>
+          <label className="form-field">
+            Password Lama
+            <input name="oldPassword" type="password" required />
+          </label>
+          <label className="form-field">
+            Password Baru
+            <input name="newPassword" type="password" minLength={8} required />
+          </label>
+          <label className="form-field">
+            Konfirmasi Password Baru
+            <input name="confirmPassword" type="password" minLength={8} required />
+          </label>
+          <button type="submit">Ubah Password</button>
+        </form>
+      </section>
     </main>
   );
 }

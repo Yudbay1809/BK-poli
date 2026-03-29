@@ -9,7 +9,7 @@ export async function getCurrentDokterContext() {
   const dokter = await prisma.dokter.findUnique({
     where: { userId },
     include: {
-      user: { select: { id: true, name: true, email: true } },
+      user: { select: { id: true, name: true, username: true, email: true } },
       dokterPolis: { include: { poli: { select: { id: true, namaPoli: true } } } },
     },
   });

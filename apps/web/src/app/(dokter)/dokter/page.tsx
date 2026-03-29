@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { DaftarPoliStatus } from "@bk-poli/db";
@@ -208,6 +209,9 @@ export default async function DokterPage({ searchParams }: PageProps) {
     <main className="flow-md">
       <h1 className="app-title">Dokter Dashboard</h1>
       <p className="app-subtitle">Jadwal hari ini, antrean aktif, input pemeriksaan, dan riwayat pasien.</p>
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+        <Link href="/dokter/profil">Profil Dokter</Link>
+      </div>
 
       {msg ? <p className="notice-success">{msg}</p> : null}
       {err ? <p className="notice-error">{err}</p> : null}

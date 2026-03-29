@@ -1,1 +1,8 @@
-export { PrismaClient, Role, DaftarPoliStatus, GuestBookingStatus, PaymentMethod } from "@prisma/client";
+export {
+  PrismaClient,
+  Role,
+  DaftarPoliStatus,
+  GuestBookingStatus,
+  PaymentMethod,
+  PaymentStatus,
+} from "@prisma/client";

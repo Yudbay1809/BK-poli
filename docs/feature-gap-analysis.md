@@ -5,59 +5,61 @@ Dokumen ini menyimpan daftar fitur yang belum ada per role, prioritas fitur dokt
 ## Gap Analysis Per Role
 
 ### Public
-- Pencarian poli/dokter lebih mendalam (filter jam, hari, lokasi).
-- Konfirmasi pendaftaran via OTP (status sudah ada di DB, UI belum tersedia).
-- Notifikasi (email/WhatsApp) untuk booking + nomor antrean.
-- Riwayat booking publik (berdasarkan kode booking + OTP).
-- Edukasi kesehatan terjadwal/berkategori.
+- [ ] Pencarian poli/dokter lebih mendalam (filter jam, hari, lokasi).
+- [x] Konfirmasi pendaftaran via OTP (verifikasi booking).
+- [x] Notifikasi booking (link WhatsApp setelah verifikasi, basic).
+- [x] Riwayat booking publik (kode booking + OTP).
+- [ ] Edukasi kesehatan terjadwal/berkategori.
 
 ### Pasien
-- Profil pasien (update data, ganti password).
-- Detail hasil pemeriksaan (diagnosis, resep, detail tindakan).
-- Upload dokumen pendukung (foto rujukan/hasil lab).
-- Notifikasi status antrian/panggilan.
-- Riwayat pembayaran dan invoice.
+- [x] Profil pasien (update data).
+- [x] Detail hasil pemeriksaan (catatan, biaya, obat).
+- [x] Ganti password pasien.
+- [ ] Upload dokumen pendukung (foto rujukan/hasil lab).
+- [x] Notifikasi status antrian/panggilan (in-app banner).
+- [ ] Riwayat pembayaran dan invoice.
 
 ### Dokter
-- Dashboard aktif (jadwal hari ini + antrean aktif).
-- Detail antrian pasien.
-- Input hasil pemeriksaan langsung (catatan + obat).
-- Update status antrian (dipanggil/selesai).
-- Riwayat pasien yang pernah diperiksa.
-- Profil dokter + update info.
-- Rekap statistik harian (jumlah pasien/obat).
-- Opsional: konsultasi online / catatan lanjutan.
+- [x] Dashboard aktif (jadwal hari ini + antrean aktif).
+- [x] Detail antrian pasien.
+- [x] Input hasil pemeriksaan langsung (catatan + obat).
+- [x] Update status antrian (dipanggil/selesai).
+- [x] Riwayat pasien yang pernah diperiksa (terakhir).
+- [x] Rekap statistik harian (ringkas).
+- [x] Profil dokter + update info.
+- [ ] Opsional: konsultasi online / catatan lanjutan.
 
 ### Admin
-- Import data master (CSV poli/dokter/obat).
-- Manajemen BPJS (validasi nomor, mapping jenis layanan).
-- Konfirmasi pembayaran / pembayaran manual.
-- Pengaturan jadwal libur nasional.
-- Laporan keuangan & statistik.
+- [x] Import data master (CSV poli/dokter/obat).
+- [x] Import data pasien (CSV).
+- [x] Manajemen BPJS (validasi nomor, mapping jenis layanan).
+- [x] Konfirmasi pembayaran / pembayaran manual.
+- [x] Pengaturan jadwal libur nasional.
+- [x] Laporan dasar (statistik harian + total master).
 
 ### Super Admin
-- Organization management real (poli, mapping dokter, struktur cabang).
-- Settings multi-cabang/klinik.
-- Monitoring real (health check, error logs, uptime).
-- Approval workflow real (aksi kritis butuh approval).
-- Governance real (retensi data, anonymization).
+- [ ] Organization management real (poli, mapping dokter, struktur cabang).
+- [ ] Settings multi-cabang/klinik.
+- [ ] Monitoring real (health check, error logs, uptime).
+- [ ] Approval workflow real (aksi kritis butuh approval).
+- [ ] Governance real (retensi data, anonymization).
 
 ## Prioritas Fitur Dokter
 
 ### Prioritas 1 (Wajib Operasional)
-- Dashboard dokter: jadwal hari ini + daftar antrean aktif.
-- Detail antrian pasien: keluhan, biodata singkat.
-- Input pemeriksaan: catatan, biaya, obat.
-- Update status antrian: dipanggil, selesai.
+- [x] Dashboard dokter: jadwal hari ini + daftar antrean aktif.
+- [x] Detail antrian pasien: keluhan, biodata singkat.
+- [x] Input pemeriksaan: catatan, biaya, obat.
+- [x] Update status antrian: dipanggil, selesai.
 
 ### Prioritas 2 (Menengah)
-- Riwayat pasien yang pernah ditangani.
-- Filter/urut antrean.
-- Statistik ringan harian.
+- [x] Riwayat pasien yang pernah ditangani (terakhir).
+- [x] Filter/urut antrean.
+- [x] Statistik ringan harian.
 
 ### Prioritas 3 (Tambahan)
-- Profil dokter (update info).
-- Upload hasil pemeriksaan atau dokumen.
+- [ ] Profil dokter (update info).
+- [ ] Upload hasil pemeriksaan atau dokumen.
 
 ## Checklist Uji End-to-End
 

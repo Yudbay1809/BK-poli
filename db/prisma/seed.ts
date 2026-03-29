@@ -4,6 +4,7 @@ import {
   DaftarPoliStatus,
   GuestBookingStatus,
   PaymentMethod,
+  PaymentStatus,
   PrismaClient,
   Role,
 } from "@prisma/client";
@@ -96,6 +97,26 @@ async function main() {
     "Poli Penyakit Dalam",
     "Layanan penyakit dalam dan kontrol kronis."
   );
+
+  await prisma.poli.updateMany({
+    data: { bpjsCode: null, bpjsName: null },
+  });
+  await prisma.poli.update({
+    where: { id: poliUmum.id },
+    data: { bpjsCode: "BPJS-UMUM", bpjsName: "Layanan Umum" },
+  });
+  await prisma.poli.update({
+    where: { id: poliAnak.id },
+    data: { bpjsCode: "BPJS-ANAK", bpjsName: "Layanan Anak" },
+  });
+  await prisma.poli.update({
+    where: { id: poliGigi.id },
+    data: { bpjsCode: "BPJS-GIGI", bpjsName: "Layanan Gigi" },
+  });
+  await prisma.poli.update({
+    where: { id: poliPenyakitDalam.id },
+    data: { bpjsCode: "BPJS-PD", bpjsName: "Penyakit Dalam" },
+  });
 
   const dokterUsers = await Promise.all([
     upsertUser({
@@ -409,6 +430,7 @@ async function main() {
       jadwalId: pickJadwal(poliUmum.id, "Senin").id,
       status: GuestBookingStatus.CONFIRMED,
       queueNumber: 2,
+      paymentStatus: PaymentStatus.PAID,
     },
     {
       bookingCode: "BK-DEMO002",
@@ -422,6 +444,7 @@ async function main() {
       jadwalId: pickJadwal(poliPenyakitDalam.id, "Kamis").id,
       status: GuestBookingStatus.CONFIRMED,
       queueNumber: 1,
+      paymentStatus: PaymentStatus.PENDING,
     },
   ];
 
@@ -439,6 +462,7 @@ async function main() {
         jadwalId: g.jadwalId,
         status: g.status,
         queueNumber: g.queueNumber,
+        paymentStatus: g.paymentStatus,
         otpVerifiedAt: new Date(),
         expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
       },
@@ -454,9 +478,23 @@ async function main() {
         jadwalId: g.jadwalId,
         status: g.status,
         queueNumber: g.queueNumber,
+        paymentStatus: g.paymentStatus,
         otpVerifiedAt: new Date(),
         expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
       },
+    });
+  }
+
+  const holidayDates = [
+    { date: "2026-03-30", label: "Libur Nasional" },
+    { date: "2026-04-01", label: "Cuti Bersama" },
+  ];
+  for (const h of holidayDates) {
+    const date = new Date(`${h.date}T00:00:00`);
+    await prisma.holiday.upsert({
+      where: { date },
+      update: { label: h.label, isClosed: true },
+      create: { date, label: h.label, isClosed: true },
     });
   }
 

@@ -94,6 +94,14 @@ export default async function CekBookingPage({ searchParams }: PageProps) {
                     <td>{statusLabel(booking.status)}</td>
                   </tr>
                   <tr>
+                    <th>Status Pembayaran</th>
+                    <td>{booking.paymentStatus}</td>
+                  </tr>
+                  <tr>
+                    <th>Waktu Pembayaran</th>
+                    <td>{booking.paidAt ? formatDateTime(booking.paidAt) : "-"}</td>
+                  </tr>
+                  <tr>
                     <th>Pembiayaan</th>
                     <td>{booking.paymentMethod === "BPJS" ? "BPJS" : "Umum"}</td>
                   </tr>

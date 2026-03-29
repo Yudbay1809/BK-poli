@@ -2,7 +2,7 @@ import { randomBytes } from "node:crypto";
 import bcrypt from "bcryptjs";
 import { redirect } from "next/navigation";
 import type { Route } from "next";
-import { GuestBookingStatus, PaymentMethod } from "@bk-poli/db";
+import { GuestBookingStatus, PaymentMethod, PaymentStatus } from "@bk-poli/db";
 import { prisma } from "@/lib/prisma";
 import PaymentMethodFields from "@/components/PaymentMethodFields";
 
@@ -26,6 +26,15 @@ function buildCode() {
 
 function buildOtp() {
   return String(Math.floor(100000 + Math.random() * 900000));
+}
+
+function normalizeBpjs(value: string) {
+  return value.replace(/\D/g, "");
+}
+
+function isValidBpjs(value: string) {
+  const digits = normalizeBpjs(value);
+  return digits.length === 13;
 }
 
 function queueDensity(totalQueue: number) {
@@ -119,14 +128,15 @@ export default async function DaftarPengobatanPage({ searchParams }: PageProps) 
     const keluhan = String(formData.get("keluhan") ?? "").trim();
     const noKtp = String(formData.get("noKtp") ?? "").trim() || null;
     const paymentMethodRaw = String(formData.get("paymentMethod") ?? "UMUM").trim().toUpperCase();
-    const bpjsNumber = String(formData.get("bpjsNumber") ?? "").trim() || null;
+    const bpjsNumberRaw = String(formData.get("bpjsNumber") ?? "").trim();
+    const bpjsNumber = bpjsNumberRaw ? normalizeBpjs(bpjsNumberRaw) : null;
     const paymentMethod = paymentMethodRaw === "BPJS" ? PaymentMethod.BPJS : PaymentMethod.UMUM;
 
     if (!nama || !noHp || !keluhan || !Number.isInteger(jadwalId) || jadwalId <= 0) {
       redirect("/daftar-pengobatan?err=Input%20belum%20lengkap");
     }
 
-    if (paymentMethod === PaymentMethod.BPJS && !bpjsNumber) {
+    if (paymentMethod === PaymentMethod.BPJS && (!bpjsNumber || !isValidBpjs(bpjsNumber))) {
       redirect("/daftar-pengobatan?err=Nomor%20BPJS%20wajib%20diisi%20jika%20memilih%20BPJS");
     }
 
@@ -154,6 +164,7 @@ export default async function DaftarPengobatanPage({ searchParams }: PageProps) 
             poliId: jadwal.poliId,
             jadwalId,
             status: GuestBookingStatus.PENDING_OTP,
+            paymentStatus: PaymentStatus.PENDING,
             queueNumber: null,
             otpVerifiedAt: null,
             expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),

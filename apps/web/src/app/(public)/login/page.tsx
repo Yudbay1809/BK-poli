@@ -6,7 +6,7 @@ import FormSubmitButton from "@/components/FormSubmitButton";
 import styles from "./login.module.css";
 
 type PageProps = {
-  searchParams?: Promise<{ error?: string }>;
+  searchParams?: Promise<{ error?: string; msg?: string }>;
 };
 
 export default async function LoginPage({ searchParams }: PageProps) {
@@ -17,6 +17,7 @@ export default async function LoginPage({ searchParams }: PageProps) {
 
   const params = searchParams ? await searchParams : undefined;
   const error = params?.error;
+  const msg = params?.msg;
 
   async function loginAction(formData: FormData) {
     "use server";
@@ -41,6 +42,7 @@ export default async function LoginPage({ searchParams }: PageProps) {
       <article className={styles.card}>
         <h1>Login BK Poli</h1>
         <p>Masuk menggunakan username atau email sesuai akun Anda.</p>
+        {msg ? <p className={styles.success}>{msg}</p> : null}
         {error ? <p className={styles.error}>{error}</p> : null}
 
         <form action={loginAction} className={styles.form}>

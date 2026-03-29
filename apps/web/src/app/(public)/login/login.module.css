@@ -55,3 +55,8 @@
   color: var(--danger);
   font-size: 0.9rem;
 }
+
+.success {
+  color: #0c6b3d;
+  font-size: 0.9rem;
+}

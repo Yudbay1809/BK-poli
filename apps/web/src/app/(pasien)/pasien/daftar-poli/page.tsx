@@ -70,6 +70,8 @@ export default async function PasienDaftarPoliPage({ searchParams }: PageProps) 
     take: 50,
   });
 
+  const dipanggilCount = myDaftars.filter((d) => d.status === DaftarPoliStatus.DIPANGGIL).length;
+
   async function createDaftarAction(formData: FormData) {
     "use server";
     const { pasien } = await getCurrentPasienContext();
@@ -133,6 +135,9 @@ export default async function PasienDaftarPoliPage({ searchParams }: PageProps) 
       <h1>Daftar Poli</h1>
       {msg ? <p>{msg}</p> : null}
       {err ? <p>{err}</p> : null}
+      {dipanggilCount > 0 ? (
+        <p className="notice-error">Ada {dipanggilCount} antrian berstatus DIPANGGIL. Silakan segera menuju poli.</p>
+      ) : null}
 
       <section>
         <h3>Buat Pendaftaran</h3>

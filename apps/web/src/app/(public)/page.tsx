@@ -22,7 +22,11 @@ export default async function HomePage({ searchParams }: PageProps) {
   const sort: "queue_low" | "time_early" | "doctor_az" =
     rawSort === "queue_low" || rawSort === "doctor_az" ? rawSort : "time_early";
 
-  const [totalPoli, totalDokter, totalPasien, totalJadwal, polis, allPolis, appConfig, jadwalsToday] = await Promise.all([
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const tomorrowStart = new Date(todayStart);
+  tomorrowStart.setDate(todayStart.getDate() + 1);
+
+  const [totalPoli, totalDokter, totalPasien, totalJadwal, polis, allPolis, appConfig, jadwalsToday, holidaysToday] = await Promise.all([
     prisma.poli.count(),
     prisma.dokter.count(),
     prisma.pasien.count(),
@@ -58,6 +62,9 @@ export default async function HomePage({ searchParams }: PageProps) {
         poli: { select: { id: true, namaPoli: true } },
       },
       take: 24,
+    }),
+    prisma.holiday.findMany({
+      where: { date: { gte: todayStart, lt: tomorrowStart }, isClosed: true },
     }),
   ]);
 
@@ -131,11 +138,14 @@ export default async function HomePage({ searchParams }: PageProps) {
     },
   ];
 
-  const openStatusLabel = "Buka Setiap Hari";
-  const openStatusDetail = "Klinik tetap buka setiap hari, status tiap poli mengikuti jadwal dokter hari ini.";
+  const isHoliday = holidaysToday.length > 0;
+  const openStatusLabel = isHoliday ? "Libur Hari Ini" : "Buka Setiap Hari";
+  const openStatusDetail = isHoliday
+    ? `Hari ini libur: ${holidaysToday[0]?.label ?? "Libur Nasional"}.`
+    : "Klinik tetap buka setiap hari, status tiap poli mengikuti jadwal dokter hari ini.";
   const waDigits = (appConfig?.contactWhatsapp ?? "081200008899").replace(/\D/g, "");
   const waLink = waDigits.startsWith("0") ? `https://wa.me/62${waDigits.slice(1)}` : `https://wa.me/${waDigits}`;
-  const isPoliOpenToday = todayName !== "Minggu";
+  const isPoliOpenToday = todayName !== "Minggu" && !isHoliday;
   const jadwalIds = jadwalsToday.map((j) => j.id);
   const [pasienQueueCounts, guestQueueCounts] = await Promise.all([
     prisma.daftarPoli.groupBy({

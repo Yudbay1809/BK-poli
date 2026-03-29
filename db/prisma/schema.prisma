@@ -34,6 +34,12 @@ enum PaymentMethod {
   BPJS
 }
 
+enum PaymentStatus {
+  PENDING
+  PAID
+  CANCELLED
+}
+
 model User {
   id           Int      @id @default(autoincrement())
   email        String   @unique
@@ -58,6 +64,8 @@ model Poli {
   id         Int      @id @default(autoincrement())
   namaPoli   String
   keterangan String?
+  bpjsCode   String?
+  bpjsName   String?
   dokterPolis DokterPoli[]
   jadwals    JadwalPeriksa[]
   guestBookings GuestBooking[]
@@ -183,6 +191,9 @@ model GuestBooking {
   poliId        Int
   jadwalId      Int
   status        GuestBookingStatus @default(PENDING_OTP)
+  paymentStatus PaymentStatus      @default(PENDING)
+  paidAt        DateTime?
+  paidByName    String?
   queueNumber   Int?
   otpVerifiedAt DateTime?
   expiresAt     DateTime
@@ -195,6 +206,14 @@ model GuestBooking {
 
   @@index([jadwalId, status])
   @@index([noKtp, jadwalId])
+}
+
+model Holiday {
+  id        Int      @id @default(autoincrement())
+  date      DateTime @unique
+  label     String?
+  isClosed  Boolean  @default(true)
+  createdAt DateTime @default(now())
 }
 
 model GuestOtp {

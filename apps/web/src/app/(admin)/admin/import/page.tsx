@@ -137,6 +137,67 @@ export default async function AdminImportPage({ searchParams }: PageProps) {
     redirect(`/admin/import?msg=Import%20dokter%20selesai.%20Tambah:${created}%20Lewat:${skipped}`);
   }
 
+  function generateNoRm() {
+    const date = new Date();
+    const ym = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, "0")}`;
+    const suffix = `${Date.now()}`.slice(-5);
+    return `${ym}-${suffix}`;
+  }
+
+  async function importPasienAction(formData: FormData) {
+    "use server";
+    await requireAuthRole(["ADMIN", "SUPER_ADMIN"]);
+    const raw = String(formData.get("csv") ?? "");
+    const rows = parseCsvLines(raw);
+    if (rows.length === 0) redirect("/admin/import?err=CSV%20pasien%20kosong");
+
+    let created = 0;
+    let skipped = 0;
+    for (const row of rows) {
+      if (row[0]?.toLowerCase() === "name") continue;
+      const name = row[0] ?? "";
+      const username = (row[1] ?? "").toLowerCase();
+      const email = (row[2] ?? "").toLowerCase();
+      const password = row[3] ?? "";
+      const noKtp = row[4] ?? "";
+      const noRm = row[5] ?? generateNoRm();
+      const alamat = row[6] ?? "";
+      const noHp = row[7] ?? "";
+
+      if (!name || !username || !email || password.length < 8 || !noKtp) {
+        skipped += 1;
+        continue;
+      }
+
+      const exists = await prisma.user.findFirst({
+        where: { OR: [{ username }, { email }] },
+      });
+      if (exists) {
+        skipped += 1;
+        continue;
+      }
+
+      const passwordHash = await bcrypt.hash(password, 12);
+      await prisma.$transaction(async (tx) => {
+        const user = await tx.user.create({
+          data: { name, username, email, passwordHash, role: "PASIEN", isActive: true },
+        });
+        await tx.pasien.create({
+          data: {
+            userId: user.id,
+            noRm,
+            noKtp,
+            alamat: alamat || null,
+            noHp: noHp || null,
+          },
+        });
+      });
+      created += 1;
+    }
+    revalidatePath("/admin/pasien");
+    redirect(`/admin/import?msg=Import%20pasien%20selesai.%20Tambah:${created}%20Lewat:${skipped}`);
+  }
+
   return (
     <main className="flow-md">
       <h1 className="app-title">Import Data Master</h1>
@@ -169,6 +230,15 @@ export default async function AdminImportPage({ searchParams }: PageProps) {
         <form action={importDokterAction} className="form-layout" style={{ maxWidth: 760 }}>
           <textarea name="csv" rows={7} placeholder="Andi,drandi,andi@bkpoli.local,Password123!,DOK-001,1|2" />
           <button type="submit">Import Dokter</button>
+        </form>
+      </section>
+
+      <section className="flow-sm">
+        <h3>Import Pasien</h3>
+        <p>Format CSV: `name,username,email,password,noKtp,noRm,alamat,noHp`</p>
+        <form action={importPasienAction} className="form-layout" style={{ maxWidth: 760 }}>
+          <textarea name="csv" rows={7} placeholder="Budi,pasien4,budi@bkpoli.local,Password123!,3173000000000009,202603-00009,Jl. Contoh,081200000009" />
+          <button type="submit">Import Pasien</button>
         </form>
       </section>
     </main>
