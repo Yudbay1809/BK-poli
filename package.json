@@ -2,6 +2,9 @@
   "name": "bk-poli-modern",
   "private": true,
   "packageManager": "pnpm@10.0.0",
+  "devDependencies": {
+    "next": "16.1.6"
+  },
   "scripts": {
     "dev": "pnpm --filter web dev",
     "build": "pnpm --filter web build",
