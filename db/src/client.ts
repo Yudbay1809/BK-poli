@@ -5,4 +5,5 @@ export {
   GuestBookingStatus,
   PaymentMethod,
   PaymentStatus,
+  ApprovalStatus,
 } from "@prisma/client";

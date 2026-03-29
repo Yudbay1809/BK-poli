@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { DaftarPoliStatus } from "@bk-poli/db";
+import { DaftarPoliStatus, Role } from "@bk-poli/db";
 import { prisma } from "@/lib/prisma";
 import { getCurrentDokterContext } from "@/lib/current-dokter";
 import EmptyState from "@/components/EmptyState";
 import FormSubmitButton from "@/components/FormSubmitButton";
+import { saveUploadedFile } from "@/lib/upload";
 
 type PageProps = {
   searchParams?: Promise<{ msg?: string; err?: string; q?: string; poliId?: string; status?: string }>;
@@ -106,6 +107,37 @@ export default async function DokterPage({ searchParams }: PageProps) {
     },
   });
 
+  const doctorDocuments = await prisma.patientDocument.findMany({
+    where: { periksa: { daftarPoli: { jadwal: { dokterId: dokter.id } } }, uploadedByRole: Role.DOKTER },
+    orderBy: { createdAt: "desc" },
+    take: 20,
+    include: {
+      periksa: {
+        include: {
+          daftarPoli: { include: { pasien: { include: { user: { select: { name: true } } } } } },
+        },
+      },
+    },
+  });
+
+  const consultations = await prisma.consultation.findMany({
+    where: { periksa: { daftarPoli: { jadwal: { dokterId: dokter.id } } } },
+    orderBy: { updatedAt: "desc" },
+    include: {
+      periksa: {
+        include: {
+          daftarPoli: { include: { pasien: { include: { user: { select: { name: true } } } } } },
+        },
+      },
+      messages: {
+        orderBy: { createdAt: "desc" },
+        take: 1,
+        include: { sender: { select: { name: true } } },
+      },
+    },
+    take: 10,
+  });
+
   async function updateStatusAction(formData: FormData) {
     "use server";
 
@@ -203,6 +235,78 @@ export default async function DokterPage({ searchParams }: PageProps) {
 
     revalidatePath("/dokter");
     redirect("/dokter?msg=Pemeriksaan%20berhasil%20disimpan");
+  }
+
+  async function uploadDokumenAction(formData: FormData) {
+    "use server";
+    const { dokter } = await getCurrentDokterContext();
+    const periksaId = Number(formData.get("periksaId"));
+    const title = String(formData.get("title") ?? "").trim();
+    const category = String(formData.get("category") ?? "").trim();
+    const file = formData.get("file");
+
+    if (!Number.isInteger(periksaId) || periksaId <= 0 || !(file instanceof File) || file.size === 0) {
+      redirect("/dokter?err=Upload%20dokumen%20tidak%20valid");
+    }
+
+    const periksa = await prisma.periksa.findFirst({
+      where: { id: periksaId, daftarPoli: { jadwal: { dokterId: dokter.id } } },
+      include: { daftarPoli: { select: { pasienId: true } } },
+    });
+    if (!periksa) {
+      redirect("/dokter?err=Pemeriksaan%20tidak%20ditemukan");
+    }
+
+    const saved = await saveUploadedFile(file, "periksa");
+    await prisma.patientDocument.create({
+      data: {
+        pasienId: periksa.daftarPoli.pasienId,
+        periksaId: periksa.id,
+        title: title || null,
+        category: category || null,
+        filePath: saved.filePath,
+        fileName: saved.fileName,
+        fileType: saved.fileType,
+        fileSize: saved.fileSize,
+        uploadedByRole: Role.DOKTER,
+      },
+    });
+
+    revalidatePath("/dokter");
+    redirect("/dokter?msg=Dokumen%20pemeriksaan%20berhasil%20diunggah");
+  }
+
+  async function sendConsultationMessageAction(formData: FormData) {
+    "use server";
+    const { dokter } = await getCurrentDokterContext();
+    const consultationId = Number(formData.get("consultationId"));
+    const message = String(formData.get("message") ?? "").trim();
+    if (!Number.isInteger(consultationId) || consultationId <= 0 || !message) {
+      redirect("/dokter?err=Pesan%20tidak%20valid");
+    }
+
+    const consultation = await prisma.consultation.findFirst({
+      where: {
+        id: consultationId,
+        periksa: { daftarPoli: { jadwal: { dokterId: dokter.id } } },
+      },
+    });
+    if (!consultation) {
+      redirect("/dokter?err=Konsultasi%20tidak%20ditemukan");
+    }
+
+    await prisma.consultationMessage.create({
+      data: {
+        consultationId: consultation.id,
+        senderRole: Role.DOKTER,
+        senderUserId: dokter.userId,
+        message,
+      },
+    });
+    await prisma.consultation.update({ where: { id: consultation.id }, data: { updatedAt: new Date() } });
+
+    revalidatePath("/dokter");
+    redirect("/dokter?msg=Pesan%20konsultasi%20terkirim");
   }
 
   return (
@@ -396,6 +500,94 @@ export default async function DokterPage({ searchParams }: PageProps) {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+      </section>
+
+      <section className="flow-sm">
+        <h3>Upload Dokumen Pemeriksaan</h3>
+        {riwayat.length === 0 ? (
+          <p>Belum ada pemeriksaan selesai untuk diunggah dokumennya.</p>
+        ) : (
+          <form action={uploadDokumenAction} className="form-layout" style={{ maxWidth: 820 }} encType="multipart/form-data">
+            <label className="form-field">
+              Pilih Pemeriksaan
+              <select name="periksaId" required>
+                <option value="">Pilih Pemeriksaan</option>
+                {riwayat.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {r.daftarPoli.pasien.user.name} | {r.daftarPoli.jadwal.poli.namaPoli} | {new Date(r.tglPeriksa).toLocaleDateString("id-ID")}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="form-field">
+              Judul Dokumen
+              <input name="title" placeholder="Contoh: Hasil Foto Rontgen" />
+            </label>
+            <label className="form-field">
+              Kategori
+              <input name="category" placeholder="Contoh: Radiologi / Lab" />
+            </label>
+            <label className="form-field">
+              File
+              <input name="file" type="file" required />
+            </label>
+            <FormSubmitButton idleLabel="Unggah Dokumen" pendingLabel="Mengunggah..." />
+          </form>
+        )}
+
+        {doctorDocuments.length > 0 ? (
+          <div className="table-scroll">
+            <table className="data-table" style={{ minWidth: 820 }}>
+              <thead>
+                <tr>
+                  <th>Pasien</th>
+                  <th>Judul</th>
+                  <th>Kategori</th>
+                  <th>Tanggal</th>
+                  <th>File</th>
+                </tr>
+              </thead>
+              <tbody>
+                {doctorDocuments.map((doc) => (
+                  <tr key={doc.id}>
+                    <td>{doc.periksa?.daftarPoli.pasien.user.name ?? "-"}</td>
+                    <td>{doc.title ?? doc.fileName}</td>
+                    <td>{doc.category ?? "-"}</td>
+                    <td>{new Date(doc.createdAt).toLocaleString("id-ID")}</td>
+                    <td>
+                      <a href={doc.filePath} target="_blank" rel="noreferrer">Unduh</a>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
+      </section>
+
+      <section className="flow-sm">
+        <h3>Konsultasi Lanjutan</h3>
+        {consultations.length === 0 ? (
+          <p>Belum ada konsultasi lanjutan dari pasien.</p>
+        ) : (
+          <div className="flow-sm">
+            {consultations.map((cons) => (
+              <div key={cons.id} className="notice-info">
+                <strong>{cons.periksa.daftarPoli.pasien.user.name}</strong>
+                <p>{cons.messages[0]?.message ?? "Belum ada pesan."}</p>
+                <small>{cons.messages[0] ? new Date(cons.messages[0].createdAt).toLocaleString("id-ID") : "-"}</small>
+                <form action={sendConsultationMessageAction} className="form-layout" style={{ maxWidth: 720 }}>
+                  <input type="hidden" name="consultationId" value={cons.id} />
+                  <label className="form-field">
+                    Balas Pesan
+                    <textarea name="message" rows={2} required />
+                  </label>
+                  <FormSubmitButton idleLabel="Kirim Balasan" pendingLabel="Mengirim..." />
+                </form>
+              </div>
+            ))}
           </div>
         )}
       </section>

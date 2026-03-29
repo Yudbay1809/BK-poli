@@ -5,19 +5,19 @@ Dokumen ini menyimpan daftar fitur yang belum ada per role, prioritas fitur dokt
 ## Gap Analysis Per Role
 
 ### Public
-- [ ] Pencarian poli/dokter lebih mendalam (filter jam, hari, lokasi).
+- [x] Pencarian poli/dokter lebih mendalam (filter jam, hari, lokasi).
 - [x] Konfirmasi pendaftaran via OTP (verifikasi booking).
 - [x] Notifikasi booking (link WhatsApp setelah verifikasi, basic).
 - [x] Riwayat booking publik (kode booking + OTP).
-- [ ] Edukasi kesehatan terjadwal/berkategori.
+- [x] Edukasi kesehatan terjadwal/berkategori.
 
 ### Pasien
 - [x] Profil pasien (update data).
 - [x] Detail hasil pemeriksaan (catatan, biaya, obat).
 - [x] Ganti password pasien.
-- [ ] Upload dokumen pendukung (foto rujukan/hasil lab).
+- [x] Upload dokumen pendukung (foto rujukan/hasil lab).
 - [x] Notifikasi status antrian/panggilan (in-app banner).
-- [ ] Riwayat pembayaran dan invoice.
+- [x] Riwayat pembayaran dan invoice.
 
 ### Dokter
 - [x] Dashboard aktif (jadwal hari ini + antrean aktif).
@@ -27,7 +27,7 @@ Dokumen ini menyimpan daftar fitur yang belum ada per role, prioritas fitur dokt
 - [x] Riwayat pasien yang pernah diperiksa (terakhir).
 - [x] Rekap statistik harian (ringkas).
 - [x] Profil dokter + update info.
-- [ ] Opsional: konsultasi online / catatan lanjutan.
+- [x] Opsional: konsultasi online / catatan lanjutan.
 
 ### Admin
 - [x] Import data master (CSV poli/dokter/obat).
@@ -38,11 +38,11 @@ Dokumen ini menyimpan daftar fitur yang belum ada per role, prioritas fitur dokt
 - [x] Laporan dasar (statistik harian + total master).
 
 ### Super Admin
-- [ ] Organization management real (poli, mapping dokter, struktur cabang).
-- [ ] Settings multi-cabang/klinik.
-- [ ] Monitoring real (health check, error logs, uptime).
-- [ ] Approval workflow real (aksi kritis butuh approval).
-- [ ] Governance real (retensi data, anonymization).
+- [x] Organization management real (poli, mapping dokter, struktur cabang).
+- [x] Settings multi-cabang/klinik.
+- [x] Monitoring real (health check, error logs, uptime).
+- [x] Approval workflow real (aksi kritis butuh approval).
+- [x] Governance real (retensi data, anonymization).
 
 ## Prioritas Fitur Dokter
 
@@ -58,8 +58,8 @@ Dokumen ini menyimpan daftar fitur yang belum ada per role, prioritas fitur dokt
 - [x] Statistik ringan harian.
 
 ### Prioritas 3 (Tambahan)
-- [ ] Profil dokter (update info).
-- [ ] Upload hasil pemeriksaan atau dokumen.
+- [x] Profil dokter (update info).
+- [x] Upload hasil pemeriksaan atau dokumen.
 
 ## Checklist Uji End-to-End
 

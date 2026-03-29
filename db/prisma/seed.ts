@@ -79,6 +79,9 @@ async function main() {
       contactPhone: "(021) 555-0188",
       contactWhatsapp: "0812-0000-8899",
       contactEmail: "layanan@bkpoli.local",
+      multiBranchEnabled: true,
+      retentionDays: 365,
+      anonymizeEnabled: true,
     },
   });
 
@@ -97,6 +100,27 @@ async function main() {
     "Poli Penyakit Dalam",
     "Layanan penyakit dalam dan kontrol kronis."
   );
+
+  const branchPusat = await prisma.clinicBranch.upsert({
+    where: { code: "KCP" },
+    update: { name: "Klinik Pusat", address: "Jl. Pusat Sehat No. 10", city: "Jakarta", province: "DKI Jakarta" },
+    create: { code: "KCP", name: "Klinik Pusat", address: "Jl. Pusat Sehat No. 10", city: "Jakarta", province: "DKI Jakarta" },
+  });
+  const branchUtara = await prisma.clinicBranch.upsert({
+    where: { code: "KUT" },
+    update: { name: "Klinik Utara", address: "Jl. Utama Utara No. 8", city: "Jakarta", province: "DKI Jakarta" },
+    create: { code: "KUT", name: "Klinik Utara", address: "Jl. Utama Utara No. 8", city: "Jakarta", province: "DKI Jakarta" },
+  });
+
+  await prisma.poli.updateMany({ data: { branchId: null } });
+  await prisma.poli.update({ where: { id: poliUmum.id }, data: { branchId: branchPusat.id } });
+  await prisma.poli.update({ where: { id: poliAnak.id }, data: { branchId: branchPusat.id } });
+  await prisma.poli.update({ where: { id: poliGigi.id }, data: { branchId: branchUtara.id } });
+  await prisma.poli.update({ where: { id: poliPenyakitDalam.id }, data: { branchId: branchUtara.id } });
+  await prisma.appConfig.update({
+    where: { id: 1 },
+    data: { defaultBranchId: branchPusat.id, multiBranchEnabled: true },
+  });
 
   await prisma.poli.updateMany({
     data: { bpjsCode: null, bpjsName: null },
@@ -415,6 +439,55 @@ async function main() {
         ],
       });
     }
+
+    const invoiceNumber = `INV-${new Date().toISOString().slice(0, 10).replace(/-/g, "")}-${periksa.id}`;
+    await prisma.patientPayment.upsert({
+      where: { periksaId: periksa.id },
+      update: {
+        pasienId: periksaTarget.pasienId,
+        amount: periksa.biayaPeriksa,
+        method: PaymentMethod.UMUM,
+        status: PaymentStatus.PAID,
+        invoiceNumber,
+        paidAt: new Date(),
+      },
+      create: {
+        periksaId: periksa.id,
+        pasienId: periksaTarget.pasienId,
+        amount: periksa.biayaPeriksa,
+        method: PaymentMethod.UMUM,
+        status: PaymentStatus.PAID,
+        invoiceNumber,
+        paidAt: new Date(),
+      },
+    });
+
+    const consultation = await prisma.consultation.upsert({
+      where: { periksaId: periksa.id },
+      update: { status: "OPEN" },
+      create: { periksaId: periksa.id, status: "OPEN" },
+    });
+    const messageExists = await prisma.consultationMessage.findFirst({
+      where: { consultationId: consultation.id },
+    });
+    if (!messageExists) {
+      await prisma.consultationMessage.createMany({
+        data: [
+          {
+            consultationId: consultation.id,
+            senderRole: Role.DOKTER,
+            senderUserId: dokters[2].userId,
+            message: "Silakan kontrol ulang jika nyeri belum berkurang.",
+          },
+          {
+            consultationId: consultation.id,
+            senderRole: Role.PASIEN,
+            senderUserId: pasiens[2].userId,
+            message: "Baik dok, apakah perlu menghindari makanan manis?",
+          },
+        ],
+      });
+    }
   }
 
   const guestBookingData = [
@@ -496,6 +569,41 @@ async function main() {
       update: { label: h.label, isClosed: true },
       create: { date, label: h.label, isClosed: true },
     });
+  }
+
+  const educationSeeds = [
+    {
+      title: "Panduan Cegah Flu Musiman",
+      category: "Pencegahan",
+      summary: "Langkah sederhana menjaga daya tahan tubuh dan higienitas harian.",
+      content: "Cukupi asupan cairan, tidur teratur, dan gunakan masker saat gejala muncul.",
+      publishAt: new Date("2026-03-28T08:00:00"),
+    },
+    {
+      title: "Cek Tekanan Darah Rutin",
+      category: "Kronis",
+      summary: "Monitoring tekanan darah membantu mencegah komplikasi jantung.",
+      content: "Lakukan pengukuran di jam yang sama, catat hasilnya, dan konsultasikan secara berkala.",
+      publishAt: new Date("2026-03-30T08:00:00"),
+    },
+    {
+      title: "Tips Gizi Seimbang Keluarga",
+      category: "Gizi",
+      summary: "Susun menu harian dengan porsi karbohidrat, protein, dan sayur seimbang.",
+      content: "Variasikan sumber protein dan kurangi konsumsi makanan tinggi gula dan lemak.",
+      publishAt: new Date("2026-04-02T08:00:00"),
+    },
+  ];
+  for (const e of educationSeeds) {
+    const existing = await prisma.healthEducation.findFirst({ where: { title: e.title } });
+    if (existing) {
+      await prisma.healthEducation.update({
+        where: { id: existing.id },
+        data: { category: e.category, summary: e.summary, content: e.content, publishAt: e.publishAt, isActive: true },
+      });
+    } else {
+      await prisma.healthEducation.create({ data: { ...e, isActive: true } });
+    }
   }
 
   const auditExists = await prisma.auditLog.findFirst({

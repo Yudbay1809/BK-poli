@@ -5,7 +5,7 @@ import EmptyState from "@/components/EmptyState";
 export default async function PublicPoliPage() {
   const polis = await prisma.poli.findMany({
     orderBy: { namaPoli: "asc" },
-    include: { _count: { select: { dokterPolis: true } } },
+    include: { _count: { select: { dokterPolis: true } }, branch: true },
   });
 
   return (
@@ -26,6 +26,7 @@ export default async function PublicPoliPage() {
                 <th>ID</th>
                 <th>Nama Poli</th>
                 <th>Keterangan</th>
+                <th>Lokasi</th>
                 <th>Jumlah Dokter</th>
               </tr>
             </thead>
@@ -35,6 +36,7 @@ export default async function PublicPoliPage() {
                   <td>{poli.id}</td>
                   <td>{poli.namaPoli}</td>
                   <td>{poli.keterangan ?? "-"}</td>
+                  <td>{poli.branch?.name ?? "-"}</td>
                   <td>{poli._count.dokterPolis}</td>
                 </tr>
               ))}

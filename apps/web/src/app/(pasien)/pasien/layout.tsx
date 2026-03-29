@@ -6,6 +6,8 @@ const menus = [
   { href: "/pasien/profil", label: "Profil" },
   { href: "/pasien/daftar-poli", label: "Daftar Poli" },
   { href: "/pasien/riwayat", label: "Riwayat Kunjungan" },
+  { href: "/pasien/pembayaran", label: "Pembayaran" },
+  { href: "/pasien/dokumen", label: "Dokumen" },
 ] as const;
 
 export default function PasienLayout({ children }: { children: React.ReactNode }) {

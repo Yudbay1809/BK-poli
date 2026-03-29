@@ -40,6 +40,12 @@ enum PaymentStatus {
   CANCELLED
 }
 
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model User {
   id           Int      @id @default(autoincrement())
   email        String   @unique
@@ -58,6 +64,24 @@ model User {
   pasien Pasien?
 
   auditLogs AuditLog[] @relation("ActorAuditLogs")
+  approvalRequests ApprovalRequest[] @relation("ApprovalRequester")
+  approvalDecisions ApprovalRequest[] @relation("ApprovalApprover")
+  consultationMessages ConsultationMessage[]
+}
+
+model ClinicBranch {
+  id        Int      @id @default(autoincrement())
+  name      String
+  code      String   @unique
+  address   String?
+  city      String?
+  province  String?
+  phone     String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  polis     Poli[]
 }
 
 model Poli {
@@ -66,9 +90,11 @@ model Poli {
   keterangan String?
   bpjsCode   String?
   bpjsName   String?
+  branchId   Int?
   dokterPolis DokterPoli[]
   jadwals    JadwalPeriksa[]
   guestBookings GuestBooking[]
+  branch     ClinicBranch? @relation(fields: [branchId], references: [id], onDelete: SetNull)
 }
 
 model Dokter {
@@ -100,6 +126,8 @@ model Pasien {
   noHp           String?
   user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   daftarPoliList DaftarPoli[]
+  documents      PatientDocument[]
+  payments       PatientPayment[]
 }
 
 model JadwalPeriksa {
@@ -136,6 +164,9 @@ model Periksa {
   biayaPeriksa  Int             @default(0)
   daftarPoli    DaftarPoli      @relation(fields: [daftarPoliId], references: [id], onDelete: Cascade)
   details       DetailPeriksa[]
+  documents     PatientDocument[]
+  payment       PatientPayment?
+  consultation  Consultation?
 }
 
 model Obat {
@@ -175,6 +206,10 @@ model AppConfig {
   contactPhone     String   @default("(021) 555-0188")
   contactWhatsapp  String   @default("0812-0000-8899")
   contactEmail     String   @default("layanan@bkpoli.local")
+  multiBranchEnabled Boolean @default(false)
+  defaultBranchId  Int?
+  retentionDays    Int      @default(365)
+  anonymizeEnabled Boolean  @default(true)
   updatedAt        DateTime @updatedAt
 }
 
@@ -228,4 +263,91 @@ model GuestOtp {
   booking      GuestBooking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
 
   @@index([bookingId, createdAt])
+}
+
+model HealthEducation {
+  id         Int      @id @default(autoincrement())
+  title      String
+  category   String
+  summary    String?
+  content    String
+  publishAt  DateTime
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model PatientDocument {
+  id             Int      @id @default(autoincrement())
+  pasienId       Int
+  periksaId      Int?
+  title          String?
+  category       String?
+  filePath       String
+  fileName       String
+  fileType       String?
+  fileSize       Int?
+  uploadedByRole Role
+  createdAt      DateTime @default(now())
+
+  pasien         Pasien   @relation(fields: [pasienId], references: [id], onDelete: Cascade)
+  periksa        Periksa? @relation(fields: [periksaId], references: [id], onDelete: SetNull)
+
+  @@index([pasienId, createdAt])
+}
+
+model PatientPayment {
+  id            Int           @id @default(autoincrement())
+  periksaId     Int           @unique
+  pasienId      Int
+  amount        Int
+  method        PaymentMethod @default(UMUM)
+  status        PaymentStatus @default(PENDING)
+  invoiceNumber String        @unique
+  paidAt        DateTime?
+  createdAt     DateTime @default(now())
+
+  periksa       Periksa @relation(fields: [periksaId], references: [id], onDelete: Cascade)
+  pasien        Pasien  @relation(fields: [pasienId], references: [id], onDelete: Cascade)
+}
+
+model Consultation {
+  id         Int      @id @default(autoincrement())
+  periksaId  Int      @unique
+  status     String   @default("OPEN")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  periksa    Periksa @relation(fields: [periksaId], references: [id], onDelete: Cascade)
+  messages   ConsultationMessage[]
+}
+
+model ConsultationMessage {
+  id              Int      @id @default(autoincrement())
+  consultationId  Int
+  senderRole      Role
+  senderUserId    Int?
+  message         String
+  createdAt       DateTime @default(now())
+
+  consultation    Consultation @relation(fields: [consultationId], references: [id], onDelete: Cascade)
+  sender          User? @relation(fields: [senderUserId], references: [id], onDelete: SetNull)
+
+  @@index([consultationId, createdAt])
+}
+
+model ApprovalRequest {
+  id               Int            @id @default(autoincrement())
+  requestedByUserId Int
+  approvedByUserId Int?
+  action           String
+  entityType       String
+  entityId         String
+  reason           String?
+  status           ApprovalStatus @default(PENDING)
+  createdAt        DateTime @default(now())
+  decidedAt        DateTime?
+
+  requester        User @relation("ApprovalRequester", fields: [requestedByUserId], references: [id], onDelete: Cascade)
+  approver         User? @relation("ApprovalApprover", fields: [approvedByUserId], references: [id], onDelete: SetNull)
 }

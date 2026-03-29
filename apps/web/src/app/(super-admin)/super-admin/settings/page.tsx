@@ -13,7 +13,10 @@ export default async function SuperAdminSettingsPage({ searchParams }: PageProps
   const msg = params?.msg;
   const err = params?.err;
 
-  const config = await prisma.appConfig.findUnique({ where: { id: 1 } });
+  const [config, branches] = await Promise.all([
+    prisma.appConfig.findUnique({ where: { id: 1 } }),
+    prisma.clinicBranch.findMany({ orderBy: { name: "asc" } }),
+  ]);
 
   async function saveConfigAction(formData: FormData) {
     "use server";
@@ -26,9 +29,22 @@ export default async function SuperAdminSettingsPage({ searchParams }: PageProps
     const contactPhone = String(formData.get("contactPhone") ?? "").trim();
     const contactWhatsapp = String(formData.get("contactWhatsapp") ?? "").trim();
     const contactEmail = String(formData.get("contactEmail") ?? "").trim();
+    const multiBranchEnabled = String(formData.get("multiBranchEnabled") ?? "") === "on";
+    const defaultBranchIdValue = String(formData.get("defaultBranchId") ?? "").trim();
+    let defaultBranchId: number | null = null;
+    if (defaultBranchIdValue) {
+      const parsedBranchId = Number(defaultBranchIdValue);
+      if (!Number.isInteger(parsedBranchId) || parsedBranchId <= 0) {
+        redirect("/super-admin/settings?err=Cabang%20default%20tidak%20valid");
+      }
+      defaultBranchId = parsedBranchId;
+    }
 
     if (!clinicName || !weekdayHours || !saturdayHours || !holidayHours || !contactPhone || !contactWhatsapp || !contactEmail) {
       redirect("/super-admin/settings?err=Semua%20field%20wajib%20diisi");
+    }
+    if (defaultBranchIdValue && defaultBranchId === null) {
+      redirect("/super-admin/settings?err=Cabang%20default%20tidak%20valid");
     }
 
     await prisma.appConfig.upsert({
@@ -41,6 +57,8 @@ export default async function SuperAdminSettingsPage({ searchParams }: PageProps
         contactPhone,
         contactWhatsapp,
         contactEmail,
+        multiBranchEnabled,
+        defaultBranchId,
       },
       create: {
         id: 1,
@@ -51,6 +69,8 @@ export default async function SuperAdminSettingsPage({ searchParams }: PageProps
         contactPhone,
         contactWhatsapp,
         contactEmail,
+        multiBranchEnabled,
+        defaultBranchId,
       },
     });
 
@@ -97,6 +117,19 @@ export default async function SuperAdminSettingsPage({ searchParams }: PageProps
           <label className="form-field">
             Kontak Email
             <input name="contactEmail" type="email" defaultValue={config?.contactEmail ?? "layanan@bkpoli.local"} required />
+          </label>
+          <label className="form-field">
+            Multi Cabang Aktif
+            <input name="multiBranchEnabled" type="checkbox" defaultChecked={config?.multiBranchEnabled ?? false} />
+          </label>
+          <label className="form-field">
+            Cabang Default
+            <select name="defaultBranchId" defaultValue={config?.defaultBranchId ?? ""}>
+              <option value="">Pilih Cabang</option>
+              {branches.map((branch) => (
+                <option key={branch.id} value={branch.id}>{branch.name}</option>
+              ))}
+            </select>
           </label>
           <button type="submit">Simpan Pengaturan</button>
         </form>

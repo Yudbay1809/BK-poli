@@ -9,15 +9,32 @@ type PoliOption = {
   namaPoli: string;
 };
 
+type BranchOption = {
+  id: number;
+  name: string;
+};
+
 type Props = {
   q: string;
   poliIdFilter: number;
   hariFilter: string;
   todayName: string;
   polis: PoliOption[];
+  branches: BranchOption[];
+  branchIdFilter: number;
+  timeRange: string;
 };
 
-export default function JadwalFilterForm({ q, poliIdFilter, hariFilter, todayName, polis }: Props) {
+export default function JadwalFilterForm({
+  q,
+  poliIdFilter,
+  hariFilter,
+  todayName,
+  polis,
+  branches,
+  branchIdFilter,
+  timeRange,
+}: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const [isPending, startTransition] = useTransition();
@@ -28,11 +45,15 @@ export default function JadwalFilterForm({ q, poliIdFilter, hariFilter, todayNam
     const qValue = String(formData.get("q") ?? "").trim();
     const poliIdValue = String(formData.get("poliId") ?? "").trim();
     const hariValue = String(formData.get("hari") ?? "").trim();
+    const branchValue = String(formData.get("branchId") ?? "").trim();
+    const timeRangeValue = String(formData.get("timeRange") ?? "").trim();
 
     const params = new URLSearchParams();
     if (qValue) params.set("q", qValue);
     if (poliIdValue) params.set("poliId", poliIdValue);
     if (hariValue && hariValue !== todayName) params.set("hari", hariValue);
+    if (branchValue) params.set("branchId", branchValue);
+    if (timeRangeValue) params.set("timeRange", timeRangeValue);
 
     const url = params.toString() ? `${pathname}?${params.toString()}` : pathname;
     startTransition(() => {
@@ -46,7 +67,7 @@ export default function JadwalFilterForm({ q, poliIdFilter, hariFilter, todayNam
     });
   }
 
-  const shouldShowReset = Boolean(q) || poliIdFilter > 0 || hariFilter !== todayName;
+  const shouldShowReset = Boolean(q) || poliIdFilter > 0 || hariFilter !== todayName || branchIdFilter > 0 || Boolean(timeRange);
 
   return (
     <form onSubmit={onSubmit} className={styles.filterForm}>
@@ -76,6 +97,26 @@ export default function JadwalFilterForm({ q, poliIdFilter, hariFilter, todayNam
           <option value="Jumat">Jumat</option>
           <option value="Sabtu">Sabtu</option>
           <option value="Minggu">Minggu</option>
+        </select>
+      </label>
+      <label className={styles.field}>
+        Lokasi
+        <select name="branchId" defaultValue={branchIdFilter > 0 ? String(branchIdFilter) : ""}>
+          <option value="">Semua Cabang</option>
+          {branches.map((branch) => (
+            <option key={branch.id} value={branch.id}>
+              {branch.name}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className={styles.field}>
+        Jam Praktik
+        <select name="timeRange" defaultValue={timeRange}>
+          <option value="">Semua Jam</option>
+          <option value="morning">Pagi (sampai 12.00)</option>
+          <option value="afternoon">Siang (12.00-16.00)</option>
+          <option value="evening">Sore (16.00+)</option>
         </select>
       </label>
       <div className={styles.filterActions}>

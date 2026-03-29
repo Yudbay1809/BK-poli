@@ -8,6 +8,9 @@ type PageProps = {
     q?: string;
     poliId?: string;
     sort?: string;
+    hari?: string;
+    timeRange?: string;
+    branchId?: string;
   }>;
 };
 
@@ -19,14 +22,18 @@ export default async function HomePage({ searchParams }: PageProps) {
   const q = (params?.q ?? "").trim();
   const poliIdFilter = Number(params?.poliId ?? 0);
   const rawSort = (params?.sort ?? "").trim();
+  const hariParam = (params?.hari ?? "").trim();
+  const timeRange = (params?.timeRange ?? "").trim();
+  const branchIdFilter = Number(params?.branchId ?? 0);
   const sort: "queue_low" | "time_early" | "doctor_az" =
     rawSort === "queue_low" || rawSort === "doctor_az" ? rawSort : "time_early";
+  const hariFilter = !hariParam ? todayName : hariParam;
 
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const tomorrowStart = new Date(todayStart);
   tomorrowStart.setDate(todayStart.getDate() + 1);
 
-  const [totalPoli, totalDokter, totalPasien, totalJadwal, polis, allPolis, appConfig, jadwalsToday, holidaysToday] = await Promise.all([
+  const [totalPoli, totalDokter, totalPasien, totalJadwal, polis, allPolis, appConfig, branches, jadwalsFiltered, holidaysToday, educations] = await Promise.all([
     prisma.poli.count(),
     prisma.dokter.count(),
     prisma.pasien.count(),
@@ -46,10 +53,12 @@ export default async function HomePage({ searchParams }: PageProps) {
       select: { id: true, namaPoli: true },
     }),
     prisma.appConfig.findUnique({ where: { id: 1 } }),
+    prisma.clinicBranch.findMany({ where: { isActive: true }, orderBy: { name: "asc" } }),
     prisma.jadwalPeriksa.findMany({
       where: {
-        hari: { contains: todayName, mode: "insensitive" },
+        ...(hariFilter !== "all" ? { hari: { contains: hariFilter, mode: "insensitive" } } : {}),
         ...(poliIdFilter > 0 ? { poliId: poliIdFilter } : {}),
+        ...(branchIdFilter > 0 ? { poli: { branchId: branchIdFilter } } : {}),
         ...(q ? { dokter: { user: { name: { contains: q, mode: "insensitive" } } } } : {}),
       },
       orderBy: [{ jamMulai: "asc" }],
@@ -66,6 +75,11 @@ export default async function HomePage({ searchParams }: PageProps) {
     prisma.holiday.findMany({
       where: { date: { gte: todayStart, lt: tomorrowStart }, isClosed: true },
     }),
+    prisma.healthEducation.findMany({
+      where: { isActive: true, publishAt: { lte: now } },
+      orderBy: { publishAt: "desc" },
+      take: 4,
+    }),
   ]);
 
   const highlights = [
@@ -81,13 +95,6 @@ export default async function HomePage({ searchParams }: PageProps) {
       title: "Ramah Semua Pengguna",
       description: "Tampilan sederhana, kontras nyaman, dan kompatibel mode gelap maupun terang.",
     },
-  ];
-
-  const healthTips = [
-    "Minum air putih cukup setiap hari dan kurangi minuman tinggi gula.",
-    "Tidur 7-8 jam per hari untuk menjaga daya tahan tubuh.",
-    "Lakukan aktivitas fisik minimal 30 menit, 4-5 kali per minggu.",
-    "Segera periksa jika demam lebih dari 3 hari atau gejala memburuk.",
   ];
 
   const clinicInfo = [
@@ -146,7 +153,16 @@ export default async function HomePage({ searchParams }: PageProps) {
   const waDigits = (appConfig?.contactWhatsapp ?? "081200008899").replace(/\D/g, "");
   const waLink = waDigits.startsWith("0") ? `https://wa.me/62${waDigits.slice(1)}` : `https://wa.me/${waDigits}`;
   const isPoliOpenToday = todayName !== "Minggu" && !isHoliday;
-  const jadwalIds = jadwalsToday.map((j) => j.id);
+  const jadwalsTimeFiltered = timeRange
+    ? jadwalsFiltered.filter((j) => {
+        const hour = j.jamMulai.getHours();
+        if (timeRange === "morning") return hour < 12;
+        if (timeRange === "afternoon") return hour >= 12 && hour < 16;
+        if (timeRange === "evening") return hour >= 16;
+        return true;
+      })
+    : jadwalsFiltered;
+  const jadwalIds = jadwalsTimeFiltered.map((j) => j.id);
   const [pasienQueueCounts, guestQueueCounts] = await Promise.all([
     prisma.daftarPoli.groupBy({
       by: ["jadwalId"],
@@ -161,7 +177,7 @@ export default async function HomePage({ searchParams }: PageProps) {
   ]);
   const pasienQueueMap = new Map(pasienQueueCounts.map((r) => [r.jadwalId, r._count._all]));
   const guestQueueMap = new Map(guestQueueCounts.map((r) => [r.jadwalId, r._count._all]));
-  const jadwalsTodayWithQueue = jadwalsToday.map((j) => ({
+  const jadwalsTodayWithQueue = jadwalsTimeFiltered.map((j) => ({
     ...j,
     totalQueue: (pasienQueueMap.get(j.id) ?? 0) + (guestQueueMap.get(j.id) ?? 0),
   }));
@@ -175,6 +191,7 @@ export default async function HomePage({ searchParams }: PageProps) {
   const visiblePolis = polis.slice(0, 4);
   const hasMoreJadwals = sortedJadwals.length > 4;
   const hasMorePolis = polis.length > 4 || (poliIdFilter === 0 && totalPoli > 4);
+  const scheduleLabel = hariFilter === "all" ? "Semua Hari" : hariFilter;
 
   return (
     <main className={styles.page}>
@@ -237,7 +254,7 @@ export default async function HomePage({ searchParams }: PageProps) {
       <section className={styles.panel}>
         <div className={styles.sectionHead}>
           <h2 className={styles.panelTitle}>Filter Cepat Dokter & Poli</h2>
-          {(q || poliIdFilter > 0 || sort !== "time_early") ? (
+          {(q || poliIdFilter > 0 || sort !== "time_early" || hariFilter !== todayName || timeRange || branchIdFilter > 0) ? (
             <Link href="/" className={styles.ctaSecondary}>
               Reset Filter
             </Link>
@@ -253,6 +270,28 @@ export default async function HomePage({ searchParams }: PageProps) {
               </option>
             ))}
           </select>
+          <select name="hari" defaultValue={hariFilter}>
+            <option value="all">Semua Hari</option>
+            <option value="Senin">Senin</option>
+            <option value="Selasa">Selasa</option>
+            <option value="Rabu">Rabu</option>
+            <option value="Kamis">Kamis</option>
+            <option value="Jumat">Jumat</option>
+            <option value="Sabtu">Sabtu</option>
+            <option value="Minggu">Minggu</option>
+          </select>
+          <select name="timeRange" defaultValue={timeRange}>
+            <option value="">Semua Jam</option>
+            <option value="morning">Pagi (sampai 12.00)</option>
+            <option value="afternoon">Siang (12.00-16.00)</option>
+            <option value="evening">Sore (16.00+)</option>
+          </select>
+          <select name="branchId" defaultValue={branchIdFilter > 0 ? String(branchIdFilter) : ""}>
+            <option value="">Semua Cabang</option>
+            {branches.map((branch) => (
+              <option key={branch.id} value={branch.id}>{branch.name}</option>
+            ))}
+          </select>
           <select name="sort" defaultValue={sort}>
             <option value="time_early">Paling Pagi</option>
             <option value="queue_low">Antrean Terpendek</option>
@@ -265,7 +304,7 @@ export default async function HomePage({ searchParams }: PageProps) {
       <section className={styles.todayBoard}>
         <article className={styles.todayPanel}>
           <div className={styles.sectionHead}>
-            <h3>Jadwal Dokter Hari Ini ({todayName})</h3>
+            <h3>Jadwal Dokter ({scheduleLabel})</h3>
             <a href="/jadwal-dokter" className={styles.cardLink}>Lihat Semua</a>
           </div>
           {visibleJadwals.length === 0 ? (
@@ -338,14 +377,22 @@ export default async function HomePage({ searchParams }: PageProps) {
 
         <section className={styles.panel}>
           <h2 className={styles.panelTitle}>Edukasi Kesehatan</h2>
-          <p>Tips sederhana untuk menjaga kesehatan harian keluarga.</p>
-          <ul className={styles.healthList}>
-            {healthTips.map((tip) => (
-              <li key={tip}>{tip}</li>
-            ))}
-          </ul>
-          <a href="/jadwal-dokter" className={styles.cardLink}>
-            Cek jadwal dokter terbaru
+          <p>Konten edukasi terjadwal berdasarkan kategori kesehatan.</p>
+          {educations.length === 0 ? (
+            <p>Belum ada konten edukasi yang ditayangkan.</p>
+          ) : (
+            <div className={styles.cards}>
+              {educations.map((edu) => (
+                <article key={edu.id} className={styles.infoCard}>
+                  <small>{edu.category} • {new Date(edu.publishAt).toLocaleDateString("id-ID")}</small>
+                  <h3>{edu.title}</h3>
+                  <p>{edu.summary ?? edu.content.slice(0, 120)}...</p>
+                </article>
+              ))}
+            </div>
+          )}
+          <a href="/edukasi" className={styles.cardLink}>
+            Lihat semua edukasi kesehatan
           </a>
         </section>
       </section>

@@ -9,6 +9,8 @@ type PageProps = {
     q?: string;
     poliId?: string;
     hari?: string;
+    branchId?: string;
+    timeRange?: string;
   }>;
 };
 
@@ -20,18 +22,24 @@ export default async function PublicJadwalDokterPage({ searchParams }: PageProps
   const params = searchParams ? await searchParams : undefined;
   const q = (params?.q ?? "").trim();
   const poliIdFilter = Number(params?.poliId ?? 0);
+  const branchIdFilter = Number(params?.branchId ?? 0);
+  const timeRange = (params?.timeRange ?? "").trim();
   const dayOrder = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"] as const;
   const dayIndex = new Map(dayOrder.map((d, i) => [d, i]));
   const todayName = dayOrder[new Date().getDay() === 0 ? 6 : new Date().getDay() - 1];
   const hariParam = (params?.hari ?? "").trim();
   const hariFilter = !hariParam ? todayName : hariParam;
 
-  const polis = await prisma.poli.findMany({ orderBy: { namaPoli: "asc" } });
+  const [polis, branches] = await Promise.all([
+    prisma.poli.findMany({ orderBy: { namaPoli: "asc" } }),
+    prisma.clinicBranch.findMany({ where: { isActive: true }, orderBy: { name: "asc" } }),
+  ]);
 
   const whereClause: {
     dokter?: { user?: { name?: { contains: string; mode: "insensitive" } } };
     poliId?: number;
     hari?: { contains: string; mode: "insensitive" };
+    poli?: { branchId?: number };
   } = {};
 
   if (poliIdFilter > 0) {
@@ -49,16 +57,30 @@ export default async function PublicJadwalDokterPage({ searchParams }: PageProps
     whereClause.hari = { contains: hariFilter, mode: "insensitive" };
   }
 
+  if (branchIdFilter > 0) {
+    whereClause.poli = { branchId: branchIdFilter };
+  }
+
   const jadwals = await prisma.jadwalPeriksa.findMany({
     where: Object.keys(whereClause).length ? whereClause : undefined,
     orderBy: [{ hari: "asc" }, { jamMulai: "asc" }],
     include: {
       dokter: { include: { user: { select: { name: true } } } },
-      poli: { select: { namaPoli: true } },
+      poli: { select: { namaPoli: true, branch: { select: { name: true, city: true } } } },
     },
   });
 
-  const sortedJadwals = [...jadwals].sort((a, b) => {
+  const filteredByTime = timeRange
+    ? jadwals.filter((j) => {
+        const hour = j.jamMulai.getHours();
+        if (timeRange === "morning") return hour < 12;
+        if (timeRange === "afternoon") return hour >= 12 && hour < 16;
+        if (timeRange === "evening") return hour >= 16;
+        return true;
+      })
+    : jadwals;
+
+  const sortedJadwals = [...filteredByTime].sort((a, b) => {
     const dayDiff = (dayIndex.get(a.hari as (typeof dayOrder)[number]) ?? 99) - (dayIndex.get(b.hari as (typeof dayOrder)[number]) ?? 99);
     if (dayDiff !== 0) return dayDiff;
     return a.jamMulai.getTime() - b.jamMulai.getTime();
@@ -90,6 +112,9 @@ export default async function PublicJadwalDokterPage({ searchParams }: PageProps
           hariFilter={hariFilter}
           todayName={todayName}
           polis={polis}
+          branches={branches}
+          branchIdFilter={branchIdFilter}
+          timeRange={timeRange}
         />
       </section>
 
@@ -113,24 +138,26 @@ export default async function PublicJadwalDokterPage({ searchParams }: PageProps
                     <th>No</th>
                     <th>Dokter</th>
                     <th>Poli</th>
-                    <th>Hari</th>
-                    <th>Jam Praktik</th>
+                  <th>Hari</th>
+                  <th>Jam Praktik</th>
+                  <th>Lokasi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sortedJadwals.map((j, idx) => (
+                  <tr key={j.id}>
+                    <td>{idx + 1}</td>
+                    <td>Dr. {j.dokter.user.name}</td>
+                    <td>{j.poli.namaPoli}</td>
+                    <td>{j.hari}</td>
+                    <td>
+                      {formatTime(j.jamMulai)} - {formatTime(j.jamSelesai)}
+                    </td>
+                    <td>{j.poli.branch?.name ?? "-"}</td>
                   </tr>
-                </thead>
-                <tbody>
-                  {sortedJadwals.map((j, idx) => (
-                    <tr key={j.id}>
-                      <td>{idx + 1}</td>
-                      <td>Dr. {j.dokter.user.name}</td>
-                      <td>{j.poli.namaPoli}</td>
-                      <td>{j.hari}</td>
-                      <td>
-                        {formatTime(j.jamMulai)} - {formatTime(j.jamSelesai)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                ))}
+              </tbody>
+            </table>
             </div>
 
             <div className={styles.mobileList}>
@@ -146,6 +173,9 @@ export default async function PublicJadwalDokterPage({ searchParams }: PageProps
                   </p>
                   <p className={styles.mobileTime}>
                     {formatTime(j.jamMulai)} - {formatTime(j.jamSelesai)}
+                  </p>
+                  <p className={styles.mobileMeta}>
+                    <span>{j.poli.branch?.name ?? "Lokasi belum ditentukan"}</span>
                   </p>
                 </article>
               ))}
