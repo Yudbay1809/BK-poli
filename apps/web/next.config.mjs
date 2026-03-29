@@ -8,6 +8,12 @@ const __dirname = path.dirname(__filename);
 const nextConfig = {
   typedRoutes: true,
   outputFileTracingRoot: path.join(__dirname, "../../"),
+  outputFileTracingExcludes: {
+    "*": ["**/node_modules/client-only/**"],
+  },
+  experimental: {
+    outputFileTracingRoot: path.join(__dirname, "../../"),
+  },
 };
 
 export default nextConfig;
